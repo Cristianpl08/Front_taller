@@ -18,6 +18,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [segments, setSegments] = useState(propSegments); // Estado para los segmentos
   const [jsonFile, setJsonFile] = useState(null); // Estado para el archivo JSON subido
   const [jsonValidation, setJsonValidation] = useState({ isValid: false, message: '' }); // Estado para validación
+  const [isFullyLoaded, setIsFullyLoaded] = useState(false); // Estado para indicar que todo está cargado
 
   // Función para validar el archivo JSON
   const validateJsonFile = (file) => {
@@ -83,9 +84,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   }, [propSegments]);
 
+  // Resetear estado de carga cuando cambian los datos del proyecto
+  useEffect(() => {
+    if (projectData) {
+      setIsFullyLoaded(false);
+    }
+  }, [projectData]);
+
   // Cargar video del proyecto cuando esté disponible
   useEffect(() => {
     if (projectData && projectData.videoUrl) {
+      console.log("🎬 Cargando video del proyecto:", projectData.videoUrl);
       setVideoUrl(projectData.videoUrl);
       setAudioUrl(projectData.videoUrl);
       setWaveLoading(true);
@@ -122,9 +131,10 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
   useEffect(() => {
     console.log("useEffect audioUrl triggered, audioUrl:", audioUrl);
+    console.log("projectData:", projectData);
     console.log("wavesurferRef.current:", wavesurferRef.current);
     
-    if (audioUrl && !wavesurferRef.current) {
+    if (audioUrl && projectData && !wavesurferRef.current) {
       console.log("Iniciando creación de WaveSurfer...");
       
       // Verificar que el contenedor existe
@@ -193,6 +203,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             console.log("Regiones agregadas:", segments.length);
           }
         setWaveLoading(false);
+        setIsFullyLoaded(true);
+        console.log("🎉 ¡Todo cargado exitosamente! Video y wave surfer listos para usar.");
       });
 
       wavesurferRef.current.on('error', (error) => {
@@ -260,7 +272,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         wavesurferRef.current = null;
       }
     };
-  }, [audioUrl]);
+  }, [audioUrl, projectData]);
 
   // Sincronizar video con WaveSurfer cuando el video se reproduce
   useEffect(() => {
@@ -365,12 +377,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         <div className="vsp-loading-overlay">
           <div>
             <div className="vsp-spinner"></div>
-            Cargando onda de audio...
+            {projectData ? 'Cargando video y onda de audio automáticamente...' : 'Cargando onda de audio...'}
           </div>
         </div>
       )}
       {/* Información del proyecto cuando está disponible */}
-      {projectData && !videoUrl && (
+      {projectData && !videoUrl && !isFullyLoaded && (
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
@@ -382,19 +394,43 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           borderRadius: '10px',
           border: '1px solid #22c55e'
         }}>
-          <h3 style={{ margin: '0', color: '#166534' }}>✓ Proyecto cargado</h3>
+          <h3 style={{ margin: '0', color: '#166534' }}>✓ Proyecto cargado automáticamente</h3>
           <p style={{ margin: '0', color: '#166534', textAlign: 'center' }}>
             {projectData.name || 'Proyecto sin nombre'}
           </p>
           {projectData.videoUrl ? (
             <p style={{ margin: '0.5em 0 0 0', color: '#166534', fontSize: '0.9em' }}>
-              Video disponible: {projectData.videoUrl}
+              🎬 Video y wave surfer se cargarán automáticamente...
             </p>
           ) : (
             <p style={{ margin: '0.5em 0 0 0', color: '#dc2626', fontSize: '0.9em' }}>
               ⚠️ No se encontró URL del video en el proyecto
             </p>
           )}
+        </div>
+      )}
+
+      {/* Mensaje de éxito cuando todo está cargado */}
+      {isFullyLoaded && projectData && (
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          gap: '1em', 
+          margin: '2em 0',
+          padding: '2em',
+          background: 'rgba(34, 197, 94, 0.1)',
+          borderRadius: '10px',
+          border: '1px solid #22c55e',
+          animation: 'fadeIn 0.5s ease-in'
+        }}>
+          <h3 style={{ margin: '0', color: '#166534' }}>🎉 ¡Todo listo!</h3>
+          <p style={{ margin: '0', color: '#166534', textAlign: 'center' }}>
+            Video y wave surfer cargados automáticamente
+          </p>
+          <p style={{ margin: '0.5em 0 0 0', color: '#166534', fontSize: '0.9em' }}>
+            {segments.length} segmentos disponibles | ¡Ya puedes reproducir!
+          </p>
         </div>
       )}
 

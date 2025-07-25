@@ -70,10 +70,18 @@ class ApiService {
         body: JSON.stringify(credentials),
       });
       
-      // Guardar el token en localStorage
-      if (response.token) {
+      // Guardar el token y datos del usuario en localStorage
+      if (response.data?.token) {
+        this.token = response.data.token;
+        localStorage.setItem('authToken', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        console.log('✅ Token JWT guardado:', response.data.token);
+        console.log('✅ Usuario guardado:', response.data.user);
+      } else if (response.token) {
+        // Compatibilidad con formato anterior
         this.token = response.token;
         localStorage.setItem('authToken', response.token);
+        console.log('✅ Token JWT guardado (formato anterior):', response.token);
       }
       
       return response;
@@ -83,10 +91,33 @@ class ApiService {
     }
   }
 
+  // Verificar autenticación
+  async verifyAuth() {
+    try {
+      const response = await this.request('/api/auth/verify');
+      return response;
+    } catch (error) {
+      console.error('Auth verification failed:', error);
+      throw error;
+    }
+  }
+
+  // Obtener todos los proyectos
+  async getAllProjects() {
+    try {
+      const response = await this.request(API_ENDPOINTS.PROJECTS);
+      return response.data?.projects || response.projects || [];
+    } catch (error) {
+      console.error('Failed to get all projects:', error);
+      throw error;
+    }
+  }
+
   // Obtener proyecto por ID
   async getProject(projectId = API_CONFIG.PROJECT_ID) {
     try {
-      return await this.request(API_ENDPOINTS.PROJECT(projectId));
+      const response = await this.request(API_ENDPOINTS.PROJECT(projectId));
+      return response.data?.project || response.project || response;
     } catch (error) {
       console.error('Failed to get project:', error);
       throw error;
@@ -109,9 +140,21 @@ class ApiService {
   }
 
   // Cerrar sesión
-  logout() {
-    this.token = null;
-    localStorage.removeItem('authToken');
+  async logout() {
+    try {
+      // Llamar endpoint de logout si existe
+      await this.request('/api/auth/logout', {
+        method: 'POST',
+      });
+    } catch (error) {
+      console.log('Logout endpoint no disponible, continuando...');
+    } finally {
+      // Limpiar token y datos del usuario
+      this.token = null;
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('user');
+      console.log('✅ Sesión cerrada, datos limpiados');
+    }
   }
 }
 

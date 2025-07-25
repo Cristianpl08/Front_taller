@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { apiService } from '../services/api.js';
-import { API_CONFIG } from '../config.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
 
-function Login({ onLoginSuccess }) {
+function Login() {
+  const { login, loading: authLoading } = useAuth();
   const [credentials, setCredentials] = useState({
     email: '',
     password: ''
@@ -48,11 +48,7 @@ function Login({ onLoginSuccess }) {
   // Log de configuración al montar el componente
   useEffect(() => {
     console.log('🔧 Login component mounted');
-    console.log('⚙️ API Configuration:', {
-      baseURL: API_CONFIG.BASE_URL,
-      projectId: API_CONFIG.PROJECT_ID,
-      loginEndpoint: '/api/auth/login'
-    });
+    console.log('🔐 Usando contexto de autenticación JWT');
   }, []);
 
   const handleInputChange = (e) => {
@@ -74,19 +70,20 @@ function Login({ onLoginSuccess }) {
       email: credentials.email,
       password: credentials.password ? '***' : 'empty'
     });
-    console.log('📋 Full credentials object:', credentials);
 
     try {
-      console.log('🚀 Calling apiService.login...');
-      const response = await apiService.login(credentials);
-      console.log('✅ Login successful:', response);
-      onLoginSuccess();
+      console.log('🚀 Calling auth context login...');
+      const result = await login(credentials);
+      
+      if (result.success) {
+        console.log('✅ Login successful');
+        // El contexto ya maneja la redirección automática
+      } else {
+        console.log('❌ Login failed:', result.message);
+        setError(result.message || 'Error de autenticación');
+      }
     } catch (error) {
       console.error('❌ Login failed:', error);
-      console.error('❌ Error details:', {
-        message: error.message,
-        stack: error.stack
-      });
       setError(`Error de autenticación: ${error.message}`);
     } finally {
       setLoading(false);
@@ -238,21 +235,21 @@ Bienvenido de nuevo        </h2>
           
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || authLoading}
             style={{
               width: '100%',
               padding: '0.75rem',
-              background: loading ? '#ccc' : '#eb4d2e',
+              background: (loading || authLoading) ? '#ccc' : '#eb4d2e',
               color: 'white',
               border: 'none',
               borderRadius: '5px',
               fontSize: '1rem',
-              cursor: loading ? 'not-allowed' : 'pointer',
+              cursor: (loading || authLoading) ? 'not-allowed' : 'pointer',
               transition: 'background 0.3s',
               fontWeight: '500'
             }}
           >
-            {loading ? 'Iniciando sesión...' : 'Iniciar sesión'}
+            {loading || authLoading ? 'Iniciando sesión...' : 'Iniciar sesión'}
           </button>
 
       

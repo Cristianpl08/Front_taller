@@ -8,5 +8,6 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   LOGIN: '/api/auth/login',
   PROJECT: (id) => `/api/projects/${id}`,
+  PROJECTS: '/api/projects',
   SEGMENTS: '/api/segments'
 }; 
