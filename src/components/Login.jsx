@@ -25,7 +25,7 @@ function Login({ onLoginSuccess }) {
           scale: 0.60,
           scaleMobile: 1.00,
           color: 0xeb4d2e,
-          backgroundColor: 0x2e3131,
+          backgroundColor: 0xffffff,
           spacing: 0,
           chaos: 4,
           size: 1.5,
@@ -102,7 +102,7 @@ function Login({ onLoginSuccess }) {
         width: '100vw',
         height: '100vh',
         overflow: 'hidden',
-        backgroundColor: '#2e3131'
+        backgroundColor: '#ffffff'
       }}
     >
 
