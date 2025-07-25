@@ -25,9 +25,15 @@ class ApiService {
       'Content-Type': 'application/json',
     };
 
+    // Obtener el token fresco de localStorage para cada petición
+    const currentToken = localStorage.getItem('authToken');
+    
     // Agregar token de autenticación si existe
-    if (this.token) {
-      defaultHeaders['Authorization'] = `Bearer ${this.token}`;
+    if (currentToken) {
+      defaultHeaders['Authorization'] = `Bearer ${currentToken}`;
+      console.log('🔐 Token incluido en la petición:', currentToken.substring(0, 20) + '...');
+    } else {
+      console.log('⚠️ No se encontró token de autenticación');
     }
 
     const config = {
@@ -125,9 +131,10 @@ class ApiService {
   }
 
   // Obtener todos los segmentos
-  async getSegments() {
+  async getSegments(projectId = API_CONFIG.PROJECT_ID) {
     try {
-      return await this.request(API_ENDPOINTS.SEGMENTS);
+      console.log('📡 Obteniendo segmentos para el proyecto:', projectId);
+      return await this.request(API_ENDPOINTS.SEGMENTS(projectId));
     } catch (error) {
       console.error('Failed to get segments:', error);
       throw error;
@@ -137,6 +144,12 @@ class ApiService {
   // Verificar si el usuario está autenticado
   isAuthenticated() {
     return !!this.token;
+  }
+
+  // Actualizar el token en la instancia del servicio
+  updateToken() {
+    this.token = localStorage.getItem('authToken');
+    console.log('🔄 Token actualizado en API service:', this.token ? 'presente' : 'no encontrado');
   }
 
   // Cerrar sesión

@@ -183,25 +183,28 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         console.log("Plugin timeline disponible:", timelinePlugin);
         console.log("Plugins de WaveSurfer:", wavesurferRef.current.plugins);
         
-                  // Verificar que el plugin de regiones esté disponible
-          if (regionsPlugin) {
-            console.log("Agregando regiones...");
-            regionsPlugin.clearRegions();
-            segments.forEach((seg, idx) => {
-              // Convertir de milisegundos a segundos para WaveSurfer
-              const startInSeconds = seg.start / 1000;
-              const endInSeconds = seg.end / 1000;
-              regionsPlugin.addRegion({
-                id: String(seg.id),
-                start: startInSeconds,
-                end: endInSeconds,
-                color: idx === currentSegmentIdx ? 'rgba(124,58,237,0.3)' : 'rgba(96,165,250,0.2)',
-                drag: false,
-                resize: false,
-              });
+        // Verificar que el plugin de regiones esté disponible
+        if (regionsPlugin && segments.length > 0) {
+          console.log("🎯 Agregando regiones automáticamente desde los segmentos cargados...");
+          regionsPlugin.clearRegions();
+          segments.forEach((seg, idx) => {
+            // Convertir de milisegundos a segundos para WaveSurfer
+            const startInSeconds = seg.start / 1000;
+            const endInSeconds = seg.end / 1000;
+            regionsPlugin.addRegion({
+              id: String(seg.id),
+              start: startInSeconds,
+              end: endInSeconds,
+              color: idx === currentSegmentIdx ? 'rgba(124,58,237,0.3)' : 'rgba(96,165,250,0.2)',
+              drag: false,
+              resize: false,
             });
-            console.log("Regiones agregadas:", segments.length);
-          }
+          });
+          console.log("✅ Regiones agregadas automáticamente:", segments.length);
+        } else {
+          console.log("⚠️ No hay segmentos disponibles para generar regiones");
+        }
+        
         setWaveLoading(false);
         setIsFullyLoaded(true);
         console.log("🎉 ¡Todo cargado exitosamente! Video y wave surfer listos para usar.");
@@ -312,6 +315,30 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       }
     }
   }, [currentSegmentIdx, segments]);
+
+  // Efecto para regenerar regiones cuando los segmentos cambien
+  useEffect(() => {
+    if (wavesurferRef.current && segments.length > 0) {
+      const regionsPlugin = wavesurferRef.current.plugins.regions;
+      if (regionsPlugin) {
+        console.log("🔄 Regenerando regiones con nuevos segmentos:", segments.length);
+        regionsPlugin.clearRegions();
+        segments.forEach((seg, idx) => {
+          const startInSeconds = seg.start / 1000;
+          const endInSeconds = seg.end / 1000;
+          regionsPlugin.addRegion({
+            id: String(seg.id),
+            start: startInSeconds,
+            end: endInSeconds,
+            color: idx === currentSegmentIdx ? 'rgba(124,58,237,0.3)' : 'rgba(96,165,250,0.2)',
+            drag: false,
+            resize: false,
+          });
+        });
+        console.log("✅ Regiones regeneradas exitosamente");
+      }
+    }
+  }, [segments]);
 
   // Actualizar el zoom dinámicamente
   useEffect(() => {

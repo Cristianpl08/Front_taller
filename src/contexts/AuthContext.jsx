@@ -16,6 +16,8 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       try {
         console.log('🔍 Verificando token JWT...');
+        // Actualizar el token en la instancia del API service
+        apiService.updateToken();
         const response = await apiService.verifyAuth();
         
         if (response.success) {
@@ -45,6 +47,8 @@ export const AuthProvider = ({ children }) => {
       
       if (response.success || response.data?.token || response.token) {
         console.log('✅ Login exitoso');
+        // Actualizar el token en la instancia del API service
+        apiService.updateToken();
         setIsAuthenticated(true);
         setUser(response.data?.user || response.user);
         return { success: true };

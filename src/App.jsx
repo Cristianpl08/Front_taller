@@ -5,6 +5,7 @@ import ProjectList from "./components/ProjectList";
 import ProjectDetail from "./components/ProjectDetail";
 import { useAuth } from "./contexts/AuthContext.jsx";
 import { API_CONFIG } from "./config.js";
+import { apiService } from "./services/api.js";
 
 function App() {
   const { isAuthenticated, user, loading: authLoading, logout } = useAuth();
@@ -12,7 +13,7 @@ function App() {
   const [projectData, setProjectData] = useState(null);
   const [segments, setSegments] = useState([]);
   const [error, setError] = useState('');
-  const [currentView, setCurrentView] = useState('projects'); // 'projects', 'detail', 'player'
+  const [currentView, setCurrentView] = useState('player'); // 'projects', 'detail', 'player'
   const [selectedProject, setSelectedProject] = useState(null);
 
   // Verificar autenticación al cargar la aplicación
@@ -33,30 +34,30 @@ function App() {
       setLoading(true);
       setError('');
       
-      console.log("📡 Cargando datos del proyecto...");
+      console.log("📡 Cargando datos del proyecto:", projectId);
       
       // Cargar proyecto
       const project = await apiService.getProject(projectId);
       console.log("✅ Proyecto cargado:", project);
       setProjectData(project);
       
-      // Cargar segmentos
-      const segmentsData = await apiService.getSegments();
-      console.log("✅ Segmentos cargados:", segmentsData.length, "segmentos");
+      // Cargar segmentos del proyecto específico
+      const segmentsData = await apiService.getSegments(projectId);
+      console.log("✅ Segmentos cargados:", segmentsData.data?.segments?.length || 0, "segmentos");
       
       // Transformar los segmentos para que sean compatibles con el formato esperado
-      const transformedSegments = segmentsData.map((segment, index) => ({
+      const transformedSegments = (segmentsData.data?.segments || []).map((segment, index) => ({
         id: index + 1, // ID numérico para compatibilidad
-        start: segment.startTime * 1000, // Convertir a milisegundos
-        end: segment.endTime * 1000, // Convertir a milisegundos
-        duration: segment.duration,
+        start: segment.start_time * 1000, // Convertir a milisegundos
+        end: segment.end_time * 1000, // Convertir a milisegundos
+        duration: segment.duration || (segment.end_time - segment.start_time),
         description: segment.description || '',
         prosody: segment.prosody || '',
         prosody2: segment.prosody2 || '',
         views: segment.views || 0,
         likes: segment.likes || 0,
         _id: segment._id,
-        projectid: segment.projectid
+        projectid: segment.project_id
       }));
       
       setSegments(transformedSegments);
@@ -168,30 +169,14 @@ function App() {
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
               <div>
-                <h1 style={{ margin: '0', fontSize: '2rem' }}>Video Segment Player</h1>
+                <h1 style={{ margin: '0', fontSize: '2rem' }}>🎬 Video Segment Player</h1>
                 {projectData && (
                   <p style={{ margin: '0.5rem 0 0 0', opacity: '0.9' }}>
-                    Proyecto: {projectData.name || selectedProject?.name || 'Sin nombre'} | ID: {selectedProject?._id || API_CONFIG.PROJECT_ID}
+                    Proyecto: {projectData.name || 'Sin nombre'} | {segments.length} segmentos disponibles
                   </p>
                 )}
               </div>
               <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                <button
-                  onClick={handleBackToProjects}
-                  style={{
-                    background: 'rgba(255,255,255,0.2)',
-                    border: '1px solid rgba(255,255,255,0.3)',
-                    color: 'white',
-                    padding: '0.5rem 1rem',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    transition: 'background 0.3s'
-                  }}
-                  onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
-                  onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
-                >
-                  ← Volver a proyectos
-                </button>
                 <button
                   onClick={handleLogout}
                   style={{
@@ -250,11 +235,11 @@ function App() {
                 margin: '1rem 2rem',
                 color: '#166534'
               }}>
-                <h3 style={{ margin: '0 0 0.5rem 0' }}>✓ Proyecto cargado desde la API</h3>
+                <h3 style={{ margin: '0 0 0.5rem 0' }}>✅ Proyecto cargado automáticamente</h3>
                 <p style={{ margin: '0', fontSize: '0.9rem' }}>
-                  {segments.length} segmentos disponibles | 
+                  <strong>{segments.length} segmentos</strong> cargados desde la API | 
                   <button
-                    onClick={() => loadProjectData(selectedProject?._id)}
+                    onClick={() => loadProjectData(API_CONFIG.PROJECT_ID)}
                     style={{
                       background: 'none',
                       border: 'none',
