@@ -3,8 +3,17 @@ export const setupAuthInterceptor = (logoutCallback) => {
   const originalFetch = window.fetch;
   
   window.fetch = async (...args) => {
+    let [resource, config = {}] = args;
+    config = { ...config, headers: { ...(config.headers || {}) } };
+
+    // Añadir token si existe
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+
     try {
-      const response = await originalFetch(...args);
+      const response = await originalFetch(resource, config);
       
       // Si la respuesta es 401 (Unauthorized), limpiar la sesión
       if (response.status === 401) {
