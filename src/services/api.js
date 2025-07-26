@@ -130,7 +130,15 @@ class ApiService {
     }
   }
 
-
+  // Enviar edición de campo de segmento (descripción/prosody)
+  async postDescriptionProsody({ segmentId, userId, fieldName, fieldValue, timestamp }) {
+    const endpoint = `/api/segments/${segmentId}/descriptions_prosody`;
+    const body = JSON.stringify({ segmentId, userId, fieldName, fieldValue, timestamp });
+    return this.request(endpoint, {
+      method: 'POST',
+      body,
+    });
+  }
 
   // Verificar si el usuario está autenticado
   isAuthenticated() {

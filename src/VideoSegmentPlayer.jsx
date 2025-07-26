@@ -8,6 +8,7 @@ import { processCloudinaryUrl, isCloudinaryUrl, generateAudioUrl, getOriginalClo
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { useAuth } from './contexts/AuthContext.jsx';
+import { apiService } from './services/api.js';
 
 function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData }) {
   const videoRef = useRef(null);
@@ -501,6 +502,28 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   };
 
+  // Handler genérico para guardar campo editable
+  const handleFieldBlur = async (fieldName, fieldValue) => {
+    if (currentSegmentIdx === -1 || !user || !segments[currentSegmentIdx]) return;
+    // Usar siempre el _id real de MongoDB
+    const segmentId = segments[currentSegmentIdx]._id;
+    const userId = user._id;
+    const timestamp = new Date().toISOString();
+    try {
+      await apiService.postDescriptionProsody({
+        segmentId,
+        userId,
+        fieldName,
+        fieldValue,
+        timestamp
+      });
+      // Opcional: feedback visual o log
+      console.log(`Campo ${fieldName} guardado correctamente.`);
+    } catch (err) {
+      console.error(`Error guardando ${fieldName}:`, err);
+    }
+  };
+
   return (
     <div className="vsp-bg" style={{ 
       padding: '20px'
@@ -800,6 +823,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   <textarea
                     value={editableDescription}
                     onChange={(e) => setEditableDescription(e.target.value)}
+                    onBlur={(e) => handleFieldBlur('description', e.target.value)}
                     placeholder="Escribe aquí la nueva descripción..."
                     disabled={currentSegmentIdx === -1}
                     style={{
@@ -843,6 +867,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       type="text"
                       value={editableProsody1}
                       onChange={(e) => setEditableProsody1(e.target.value)}
+                      onBlur={(e) => handleFieldBlur('prosody 1', e.target.value)}
                       placeholder="Escribe aquí la emoción principal..."
                       disabled={currentSegmentIdx === -1}
                       style={{
@@ -879,6 +904,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       type="text"
                       value={editableProsody2}
                       onChange={(e) => setEditableProsody2(e.target.value)}
+                      onBlur={(e) => handleFieldBlur('prosody 2', e.target.value)}
                       placeholder="Escribe aquí la emoción secundaria..."
                       disabled={currentSegmentIdx === -1}
                       style={{
