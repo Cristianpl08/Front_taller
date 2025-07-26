@@ -809,7 +809,11 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 key={seg.id}
                 onClick={() => { setCurrentSegmentIdx(idx); goToSegment(seg.start); }}
                 className="vsp-segment-btn"
-                style={idx === currentSegmentIdx ? { border: '2px solid #7c3aed', background: 'linear-gradient(90deg, #7c3aed 60%, #60a5fa 100%)' } : {}}
+                style={idx === currentSegmentIdx ? { 
+                  border: '2px solid #ea580c', 
+                  background: '#ea580c',
+                  color: '#fff'
+                } : {}}
               >
                 #{seg.id} ({(seg.start/1000).toFixed(1)}s - {(seg.end/1000).toFixed(1)}s)
               </button>
