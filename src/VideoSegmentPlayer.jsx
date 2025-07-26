@@ -574,118 +574,241 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               />
             </div>
             
-            {/* Columna de campos de texto */}
+            {/* Columna de campos de texto - Ambas secciones apiladas */}
             <div style={{ 
-              flex: '1', 
+              flex: '1',
               display: 'flex', 
               flexDirection: 'column', 
               gap: '1em',
-              minWidth: '300px',
-              opacity: currentSegmentIdx === -1 ? 0.5 : 1,
-              pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
-              transition: 'opacity 0.3s ease'
+              minWidth: '400px'
             }}>
-              <div style={{ 
-                background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                padding: '1em', 
-                borderRadius: '8px',
-                border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
+              {/* Sección Original */}
+              <div style={{
+                opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                transition: 'opacity 0.3s ease'
               }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5em', 
-                  fontWeight: 'bold',
-                  color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                
+                                 <div style={{ 
+                   background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
+                   padding: '0.75em', 
+                   borderRadius: '8px',
+                   border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
+                 }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5em', 
+                    fontWeight: 'bold',
+                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                  }}>
+                    Descripción Original:
+                  </label>
+                  <textarea
+                    value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.description || '' : ''}
+                    readOnly
+                    disabled={currentSegmentIdx === -1}
+                    style={{
+                      width: '100%',
+                      minHeight: '40px',
+                      maxHeight: '60px',
+                      padding: '0.4em',
+                      border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                      borderRadius: '4px',
+                      resize: 'vertical',
+                      fontFamily: 'inherit',
+                      fontSize: '14px',
+                      background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                      cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
+                      boxSizing: 'border-box'
+                    }}
+                    placeholder="Sin descripción disponible"
+                  />
+                </div>
+                
+                <div style={{ 
+                  display: 'flex',
+                  gap: '1em',
+                  marginTop: '0.75em'
                 }}>
-                  Descripción:
-                </label>
-                <textarea
-                  value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.description || '' : ''}
-                  readOnly
-                  disabled={currentSegmentIdx === -1}
-                  style={{
-                    width: '100%',
-                    minHeight: '80px',
-                    padding: '0.5em',
-                    border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                    borderRadius: '4px',
-                    resize: 'vertical',
-                    fontFamily: 'inherit',
-                    fontSize: '14px',
-                    background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                    cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default'
-                  }}
-                  placeholder="Sin descripción disponible"
-                />
+                  <div style={{ 
+                    flex: '1',
+                    background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
+                    padding: '0.75em', 
+                    borderRadius: '8px',
+                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
+                  }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5em', 
+                      fontWeight: 'bold',
+                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                    }}>
+                      Prosody 1 Original:
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody || '' : ''}
+                      readOnly
+                      disabled={currentSegmentIdx === -1}
+                      style={{
+                        width: '100%',
+                        padding: '0.4em',
+                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                        borderRadius: '4px',
+                        fontFamily: 'inherit',
+                        fontSize: '14px',
+                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
+                        boxSizing: 'border-box'
+                      }}
+                      placeholder="Sin emoción principal"
+                    />
+                  </div>
+                  
+                  <div style={{ 
+                    flex: '1',
+                    background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
+                    padding: '0.75em', 
+                    borderRadius: '8px',
+                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
+                  }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5em', 
+                      fontWeight: 'bold',
+                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                    }}>
+                      Prosody 2 Original:
+                    </label>
+                    <input
+                      type="text"
+                      value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody2 || '' : ''}
+                      readOnly
+                      disabled={currentSegmentIdx === -1}
+                      style={{
+                        width: '100%',
+                        padding: '0.4em',
+                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                        borderRadius: '4px',
+                        fontFamily: 'inherit',
+                        fontSize: '14px',
+                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
+                        boxSizing: 'border-box'
+                      }}
+                      placeholder="Sin emoción secundaria"
+                    />
+                  </div>
+                </div>
               </div>
               
-              <div style={{ 
-                background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                padding: '1em', 
-                borderRadius: '8px',
-                border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
-              }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5em', 
-                  fontWeight: 'bold',
-                  color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+              {/* Sección Nueva (Editable) */}
+              <div>
+                <div style={{ 
+                  background: 'rgba(59,130,246,0.05)', 
+                  padding: '0.75em', 
+                  borderRadius: '8px',
+                  border: '1px solid rgba(59,130,246,0.2)',
+                  marginBottom: '0.75em'
                 }}>
-                  Emoción Principal (Prosody):
-                </label>
-                <input
-                  type="text"
-                  value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody || '' : ''}
-                  readOnly
-                  disabled={currentSegmentIdx === -1}
-                  style={{
-                    width: '100%',
-                    padding: '0.5em',
-                    border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                    borderRadius: '4px',
-                    fontFamily: 'inherit',
-                    fontSize: '14px',
-                    background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                    cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default'
-                  }}
-                  placeholder="Sin emoción principal"
-                />
-              </div>
-              
-              <div style={{ 
-                background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                padding: '1em', 
-                borderRadius: '8px',
-                border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
-              }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.5em', 
-                  fontWeight: 'bold',
-                  color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.5em', 
+                    fontWeight: 'bold',
+                    color: '#1e293b'
+                  }}>
+                    Descripción:
+                  </label>
+                  <textarea
+                    placeholder="Escribe aquí la nueva descripción..."
+                    style={{
+                      width: '100%',
+                      minHeight: '40px',
+                      maxHeight: '60px',
+                      padding: '0.4em',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '4px',
+                      resize: 'vertical',
+                      fontFamily: 'inherit',
+                      fontSize: '14px',
+                      background: '#ffffff',
+                      color: '#000',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                
+                <div style={{ 
+                  display: 'flex',
+                  gap: '0.75em'
                 }}>
-                  Emoción Secundaria (Prosody 2):
-                </label>
-                <input
-                  type="text"
-                  value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody2 || '' : ''}
-                  readOnly
-                  disabled={currentSegmentIdx === -1}
-                  style={{
-                    width: '100%',
-                    padding: '0.5em',
-                    border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                    borderRadius: '4px',
-                    fontFamily: 'inherit',
-                    fontSize: '14px',
-                    background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                    cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default'
-                  }}
-                  placeholder="Sin emoción secundaria"
-                />
+                  <div style={{ 
+                    flex: '1',
+                    background: 'rgba(59,130,246,0.05)', 
+                    padding: '0.75em', 
+                    borderRadius: '8px',
+                    border: '1px solid rgba(59,130,246,0.2)'
+                  }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5em', 
+                      fontWeight: 'bold',
+                      color: '#1e293b'
+                    }}>
+                      Prosody 1:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Escribe aquí la emoción principal..."
+                      style={{
+                        width: '100%',
+                        padding: '0.4em',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '4px',
+                        fontFamily: 'inherit',
+                        fontSize: '14px',
+                        background: '#ffffff',
+                        color: '#000',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                  
+                  <div style={{ 
+                    flex: '1',
+                    background: 'rgba(59,130,246,0.05)', 
+                    padding: '0.75em', 
+                    borderRadius: '8px',
+                    border: '1px solid rgba(59,130,246,0.2)'
+                  }}>
+                    <label style={{ 
+                      display: 'block', 
+                      marginBottom: '0.5em', 
+                      fontWeight: 'bold',
+                      color: '#1e293b'
+                    }}>
+                      Prosody 2:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Escribe aquí la emoción secundaria..."
+                      style={{
+                        width: '100%',
+                        padding: '0.4em',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '4px',
+                        fontFamily: 'inherit',
+                        fontSize: '14px',
+                        background: '#ffffff',
+                        color: '#000',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
