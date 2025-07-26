@@ -24,8 +24,8 @@ function Login() {
           minWidth: 100.00,
           scale: 0.60,
           scaleMobile: 1.00,
-          color: 0xeb4d2e,
-          backgroundColor: 0xffffff,
+          color: 0xff6b35,
+          backgroundColor: 0xf8f9fa,
           spacing: 0,
           chaos: 4,
           size: 1.5,
@@ -146,18 +146,18 @@ Bienvenido de nuevo        </h2>
                value={credentials.email}
                onChange={handleInputChange}
                required
-               style={{
-                 width: '100%',
-                 padding: '0.75rem',
-                 border: '2px solid #333',
-                 borderRadius: '5px',
-                 fontSize: '1rem',
-                 boxSizing: 'border-box',
-                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                 color: '#eb4d2e',
-                 fontWeight: '500',
-                 transition: 'all 0.3s ease'
-               }}
+                               style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '2px solid #333',
+                  borderRadius: '5px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#f8f9fa',
+                  color: '#eb4d2e',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease'
+                }}
                placeholder="usuario@gmail.com"
                onFocus={(e) => {
                  e.target.style.transform = 'scale(1.02)';
@@ -189,20 +189,20 @@ Bienvenido de nuevo        </h2>
                value={credentials.password}
                onChange={handleInputChange}
                required
-               style={{
-                 width: '100%',
-                 padding: '0.75rem',
-                 border: '2px solid #333',
-                 borderRadius: '5px',
-                 fontSize: '1rem',
-                 boxSizing: 'border-box',
-                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                 color: '#eb4d2e',
-                 fontWeight: '500',
-                 transition: 'all 0.3s ease',
-                 WebkitTextSecurity: 'disc',
-                 textSecurity: 'disc'
-               }}
+                               style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '2px solid #333',
+                  borderRadius: '5px',
+                  fontSize: '1rem',
+                  boxSizing: 'border-box',
+                  backgroundColor: '#f8f9fa',
+                  color: '#eb4d2e',
+                  fontWeight: '500',
+                  transition: 'all 0.3s ease',
+                  WebkitTextSecurity: 'disc',
+                  textSecurity: 'disc'
+                }}
                placeholder="Contraseña"
                onFocus={(e) => {
                  e.target.style.transform = 'scale(1.02)';

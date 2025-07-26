@@ -113,7 +113,7 @@ function ProjectDetail({ projectId, onBackToList, onOpenPlayer }) {
           width: '40px',
           height: '40px',
           border: '4px solid #f3f3f3',
-          borderTop: '4px solid #667eea',
+          borderTop: '4px solid #ea580c',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }}></div>
@@ -147,7 +147,7 @@ function ProjectDetail({ projectId, onBackToList, onOpenPlayer }) {
         <button
           onClick={onBackToList}
           style={{
-            background: '#667eea',
+            background: '#ea580c',
             color: 'white',
             border: 'none',
             padding: '0.75rem 1.5rem',
@@ -176,7 +176,7 @@ function ProjectDetail({ projectId, onBackToList, onOpenPlayer }) {
         <button
           onClick={onBackToList}
           style={{
-            background: '#667eea',
+            background: '#ea580c',
             color: 'white',
             border: 'none',
             padding: '0.75rem 1.5rem',
@@ -211,7 +211,7 @@ function ProjectDetail({ projectId, onBackToList, onOpenPlayer }) {
           <button
             onClick={onBackToList}
             style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)',
               color: 'white',
               border: 'none',
               padding: '0.75rem 1.5rem',
@@ -351,13 +351,13 @@ function ProjectDetail({ projectId, onBackToList, onOpenPlayer }) {
                 }}
                 onClick={handleSeek}
               >
-                <div style={{
-                  width: `${(currentTime / duration) * 100}%`,
-                  height: '100%',
-                  background: '#667eea',
-                  borderRadius: '2px',
-                  transition: 'width 0.1s ease'
-                }} />
+                                 <div style={{
+                   width: `${(currentTime / duration) * 100}%`,
+                   height: '100%',
+                   background: '#ea580c',
+                   borderRadius: '2px',
+                   transition: 'width 0.1s ease'
+                 }} />
               </div>
 
               {/* Controles principales */}

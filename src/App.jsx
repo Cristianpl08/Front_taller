@@ -125,13 +125,13 @@ function App() {
 
   if (authLoading || loading) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-      }}>
+              <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          background: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)'
+        }}>
         <div style={{
           background: 'white',
           padding: '2rem',
@@ -143,7 +143,7 @@ function App() {
             width: '40px',
             height: '40px',
             border: '4px solid #f3f3f3',
-            borderTop: '4px solid #667eea',
+            borderTop: '4px solid #ea580c',
             borderRadius: '50%',
             animation: 'spin 1s linear infinite',
             margin: '0 auto 1rem'
@@ -187,18 +187,18 @@ function App() {
           <div>
             {/* Header con información del proyecto y botón de logout */}
             <div style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)',
               color: 'white',
-              padding: '1rem 2rem',
+              padding: '0.5rem 1.5rem',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
               <div>
-                <h1 style={{ margin: '0', fontSize: '2rem' }}>🎬 Taller</h1>
+                <h1 style={{ margin: '0', fontSize: '1.5rem' }}>🎬 Taller</h1>
                 {projectData && (
-                  <p style={{ margin: '0.5rem 0 0 0', opacity: '0.9' }}>
+                  <p style={{ margin: '0.25rem 0 0 0', opacity: '0.9', fontSize: '0.85rem' }}>
                     {segments.length} segmentos disponibles
                   </p>
                 )}
@@ -210,10 +210,11 @@ function App() {
                     background: 'rgba(255,255,255,0.2)',
                     border: '1px solid rgba(255,255,255,0.3)',
                     color: 'white',
-                    padding: '0.5rem 1rem',
+                    padding: '0.4rem 0.8rem',
                     borderRadius: '5px',
                     cursor: 'pointer',
-                    transition: 'background 0.3s'
+                    transition: 'background 0.3s',
+                    fontSize: '0.9rem'
                   }}
                   onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
                   onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
@@ -273,20 +274,20 @@ function App() {
       {/* Header principal solo para vistas de proyectos y detalle */}
       {currentView !== 'player' && (
         <div style={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          background: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)',
           color: 'white',
-          padding: '1rem 2rem',
+          padding: '0.5rem 1.5rem',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
         }}>
                   <div>
-          <h1 style={{ margin: '0', fontSize: '2rem' }}>
+          <h1 style={{ margin: '0', fontSize: '1.5rem' }}>
             {currentView === 'projects' ? '📁 Mis Proyectos' : '🎬 Reproductor de Videos'}
           </h1>
           {user && (
-            <p style={{ margin: '0.5rem 0 0 0', opacity: '0.9', fontSize: '0.9rem' }}>
+            <p style={{ margin: '0.25rem 0 0 0', opacity: '0.9', fontSize: '0.85rem' }}>
               👤 {user.email || user.name || 'Usuario'}
             </p>
           )}
@@ -297,10 +298,11 @@ function App() {
               background: 'rgba(255,255,255,0.2)',
               border: '1px solid rgba(255,255,255,0.3)',
               color: 'white',
-              padding: '0.5rem 1rem',
+              padding: '0.4rem 0.8rem',
               borderRadius: '5px',
               cursor: 'pointer',
-              transition: 'background 0.3s'
+              transition: 'background 0.3s',
+              fontSize: '0.9rem'
             }}
             onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
             onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}

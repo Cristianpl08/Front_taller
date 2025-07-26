@@ -18,7 +18,7 @@ function ProjectList({ onProjectSelect }) {
           width: '40px',
           height: '40px',
           border: '4px solid #f3f3f3',
-          borderTop: '4px solid #667eea',
+          borderTop: '4px solid #ea580c',
           borderRadius: '50%',
           animation: 'spin 1s linear infinite'
         }}></div>
@@ -106,7 +106,7 @@ function ProjectList({ onProjectSelect }) {
             key={project._id}
             onClick={() => onProjectSelect(project)}
             style={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, #ea580c 0%, #fb923c 100%)',
               borderRadius: '12px',
               padding: '1.5rem',
               cursor: 'pointer',

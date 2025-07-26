@@ -456,7 +456,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             </h3>
             {projectData && (
               <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
-                <p style={{ margin: '0.5rem 0' }}>📡 Descargando video desde Google Drive...</p>
+                <p style={{ margin: '0.5rem 0' }}>📡 Descargando video...</p>
                 <p style={{ margin: '0.5rem 0' }}>🎵 Generando onda de audio...</p>
                 <p style={{ margin: '0.5rem 0' }}>🎯 Configurando {segments.length} segmentos...</p>
               </div>
@@ -608,7 +608,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     resize: 'vertical',
                     fontFamily: 'inherit',
                     fontSize: '14px',
-                    background: '#fff',
+                    background: '#f8f9fa',
                     color: '#000'
                   }}
                   placeholder="Sin descripción disponible"
@@ -640,7 +640,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     borderRadius: '4px',
                     fontFamily: 'inherit',
                     fontSize: '14px',
-                    background: '#fff',
+                    background: '#f8f9fa',
                     color: '#000'
                   }}
                   placeholder="Sin emoción principal"
@@ -672,7 +672,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     borderRadius: '4px',
                     fontFamily: 'inherit',
                     fontSize: '14px',
-                    background: '#fff',
+                    background: '#f8f9fa',
                     color: '#000'
                   }}
                   placeholder="Sin emoción secundaria"
