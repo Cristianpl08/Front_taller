@@ -118,7 +118,7 @@ html, body {
 
 .vsp-waveform-container {
   width: 100%;
-  max-width: 1250px;
+  max-width: 1800px;
   background: #0f172a;
   border-radius: 14px;
   margin-bottom: 1.2rem;
@@ -216,9 +216,16 @@ html, body {
   border-color: #ea580c;
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 1400px) {
   .vsp-waveform-container {
+    width: 98vw;
     max-width: 98vw;
+  }
+}
+
+@media (min-width: 1800px) {
+  .vsp-waveform-container {
+    max-width: 2200px;
   }
 }
 
@@ -227,6 +234,10 @@ html, body {
     padding: 1.2rem 0 1.5rem 0;
   }
   .vsp-video, .vsp-waveform, .vsp-timeline {
+    max-width: 98vw;
+  }
+  .vsp-waveform-container {
+    width: 98vw;
     max-width: 98vw;
   }
 }
@@ -282,5 +293,59 @@ html, body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.vsp-fields-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.vsp-fields-editable-row {
+  display: flex;
+  gap: 1em;
+}
+
+.vsp-field-editable-block {
+  background: rgba(59,130,246,0.05);
+  padding: 0.75em;
+  border-radius: 8px;
+  border: 1px solid rgba(59,130,246,0.2);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.vsp-field-desc {
+  flex: 2;
+  min-width: 200px;
+}
+
+.vsp-field-prosody {
+  flex: 1;
+  min-width: 120px;
+}
+
+.vsp-fields-prosody-row {
+  display: flex;
+  gap: 0.75em;
+}
+
+@media (max-width: 900px) {
+  .vsp-fields-container {
+    max-width: 98vw;
+  }
+  .vsp-fields-editable-row {
+    flex-direction: column;
+    gap: 0.75em;
+  }
+  .vsp-fields-prosody-row {
+    flex-direction: column;
+    gap: 0.75em;
   }
 }

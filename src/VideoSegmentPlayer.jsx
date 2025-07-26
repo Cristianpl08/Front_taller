@@ -557,7 +557,11 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       )}
       {/* El resto del renderizado igual, pero usando 'segments' del estado */}
       {videoUrl && segments.length > 0 && (
-        <div style={{ width: "100%" }}>
+        <div style={{ 
+          width: "100%", 
+          maxWidth: "1800px",
+          margin: "0 auto"
+        }}>
           <div style={{ 
             display: 'flex', 
             gap: '2em', 
@@ -565,7 +569,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             alignItems: 'flex-start'
           }}>
             {/* Columna del video */}
-            <div style={{ flex: '1' }}>
+            <div style={{ flex: '1', maxWidth: '900px' }}>
               <video
                 ref={videoRef}
                 src={videoUrl}
@@ -575,12 +579,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             </div>
             
             {/* Columna de campos de texto - Ambas secciones apiladas */}
-            <div style={{ 
+            <div className="vsp-fields-container" style={{ 
               flex: '1',
               display: 'flex', 
               flexDirection: 'column', 
               gap: '1em',
-              minWidth: '400px'
+              minWidth: '400px',
+              maxWidth: '900px',
+              margin: '0 auto'
             }}>
               {/* Sección Original */}
               <div style={{
@@ -707,7 +713,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               
               {/* Sección Nueva (Editable) */}
               <div>
-                <div style={{ 
+                <div className="vsp-field-editable-block" style={{ 
                   background: 'rgba(59,130,246,0.05)', 
                   padding: '0.75em', 
                   borderRadius: '8px',
@@ -741,11 +747,11 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   />
                 </div>
                 
-                <div style={{ 
+                <div className="vsp-fields-prosody-row" style={{ 
                   display: 'flex',
                   gap: '0.75em'
                 }}>
-                  <div style={{ 
+                  <div className="vsp-field-editable-block" style={{ 
                     flex: '1',
                     background: 'rgba(59,130,246,0.05)', 
                     padding: '0.75em', 
@@ -777,7 +783,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     />
                   </div>
                   
-                  <div style={{ 
+                  <div className="vsp-field-editable-block" style={{ 
                     flex: '1',
                     background: 'rgba(59,130,246,0.05)', 
                     padding: '0.75em', 
@@ -818,7 +824,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             alignItems: 'flex-start', 
             gap: '1em',
             width: '100%',
-            maxWidth: '1250px'
+            maxWidth: '1800px'
           }}>
             {/* Sidebar de controles */}
             <div style={{
