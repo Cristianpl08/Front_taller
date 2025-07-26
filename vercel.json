@@ -3,10 +3,5 @@
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "npm ci",
-  "devCommand": "npm run dev",
-  "functions": {
-    "dist/**/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  "devCommand": "npm run dev"
 } 
