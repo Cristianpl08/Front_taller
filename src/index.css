@@ -26,8 +26,8 @@ body {
   margin: 0;
   padding: 0;
   min-width: 320px;
-  height: 100vh;
-  overflow: hidden;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 h1 {
@@ -71,5 +71,5 @@ body {
   background: #2e3131;
   margin: 0;
   padding: 0;
-  overflow: hidden;
+  overflow-y: auto;
 }
