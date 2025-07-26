@@ -128,6 +128,16 @@ html, body {
   position: relative;
 }
 
+/* Ocultar scrollbars del waveform */
+.vsp-waveform-container ::-webkit-scrollbar {
+  display: none;
+}
+
+.vsp-waveform-container {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .vsp-timeline {
   background: transparent !important;
   border: none !important;
@@ -142,6 +152,16 @@ html, body {
   display: block;
 }
 
+/* Ocultar scrollbars del timeline */
+.vsp-timeline ::-webkit-scrollbar {
+  display: none;
+}
+
+.vsp-timeline {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .vsp-waveform {
   background: transparent !important;
   border: none !important;
@@ -154,6 +174,16 @@ html, body {
   min-height: 80px;
   position: relative;
   z-index: 1;
+}
+
+/* Ocultar scrollbars del waveform */
+.vsp-waveform ::-webkit-scrollbar {
+  display: none;
+}
+
+.vsp-waveform {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .vsp-segments {

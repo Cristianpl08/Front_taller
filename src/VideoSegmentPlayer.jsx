@@ -5,6 +5,8 @@ import "./App.css";
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import TimelinePlugin from 'wavesurfer.js/dist/plugins/timeline.esm.js';
 import { processCloudinaryUrl, isCloudinaryUrl, generateAudioUrl, getOriginalCloudinaryUrl } from './utils/cloudinaryHelper.js';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 
 function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData }) {
   const videoRef = useRef(null);
@@ -679,61 +681,127 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             </div>
           </div>
           
-          <div className="vsp-waveform-container">
-            <div id="waveform" className="vsp-waveform" />
-            <div id="timeline" className="vsp-timeline" />
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1em', margin: '0.7em 0 0.2em 0' }}>
-            <button
-              onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.25))}
-              title="Zoom Out"
-              style={{
-                background: 'rgba(30,41,59,0.7)',
-                border: 'none',
-                borderRadius: '50%',
-                width: 36,
-                height: 36,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                cursor: 'pointer',
-                color: '#fff',
-                transition: 'background 0.2s',
-                fontSize: 20
-              }}
-              onMouseOver={e => e.currentTarget.style.background = '#7c3aed'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(30,41,59,0.7)'}
-            >
-              -
-            </button>
-            <button
-              onClick={() => setZoomLevel(z => Math.min(5, z + 0.25))}
-              title="Zoom In"
-              style={{
-                background: 'rgba(30,41,59,0.7)',
-                border: 'none',
-                borderRadius: '50%',
-                width: 36,
-                height: 36,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                cursor: 'pointer',
-                color: '#fff',
-                transition: 'background 0.2s',
-                fontSize: 20
-              }}
-              onMouseOver={e => e.currentTarget.style.background = '#7c3aed'}
-              onMouseOut={e => e.currentTarget.style.background = 'rgba(30,41,59,0.7)'}
-            >
-              +
-            </button>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1em', marginBottom: '1em' }}>
-            <button onClick={goToPrevSegment} disabled={currentSegmentIdx <= 0} className="vsp-segment-btn">Anterior</button>
-            <button onClick={goToNextSegment} disabled={currentSegmentIdx >= segments.length - 1} className="vsp-segment-btn">Siguiente</button>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'flex-start', 
+            gap: '1em',
+            width: '100%',
+            maxWidth: '1250px'
+          }}>
+            {/* Sidebar de controles */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: '0.5em',
+              padding: '0.5em',
+              background: '#374151',
+              borderRadius: '8px',
+              minWidth: '80px'
+            }}>
+              {/* Controles de zoom */}
+              <button
+                onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.25))}
+                title="Zoom Out"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>-</span>
+              </button>
+              <button
+                onClick={() => setZoomLevel(z => Math.min(5, z + 0.25))}
+                title="Zoom In"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>+</span>
+              </button>
+              
+              {/* Controles de navegación */}
+              <button 
+                onClick={goToPrevSegment} 
+                disabled={currentSegmentIdx <= 0}
+                title="Segmento Anterior"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: currentSegmentIdx <= 0 ? 'not-allowed' : 'pointer',
+                  color: currentSegmentIdx <= 0 ? 'rgba(255,255,255,0.3)' : '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => {
+                  if (currentSegmentIdx > 0) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  }
+                }}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <ArrowLeftIcon style={{ fontSize: '20px' }} />
+              </button>
+              <button 
+                onClick={goToNextSegment} 
+                disabled={currentSegmentIdx >= segments.length - 1}
+                title="Segmento Siguiente"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: currentSegmentIdx >= segments.length - 1 ? 'not-allowed' : 'pointer',
+                  color: currentSegmentIdx >= segments.length - 1 ? 'rgba(255,255,255,0.3)' : '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => {
+                  if (currentSegmentIdx < segments.length - 1) {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  }
+                }}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <ArrowRightIcon style={{ fontSize: '20px' }} />
+              </button>
+            </div>
+            
+            {/* Contenedor del waveform */}
+            <div className="vsp-waveform-container" style={{ flex: 1 }}>
+              <div id="waveform" className="vsp-waveform" />
+              <div id="timeline" className="vsp-timeline" />
+            </div>
           </div>
           <div className="vsp-segments">
             {segments.map((seg, idx) => (
