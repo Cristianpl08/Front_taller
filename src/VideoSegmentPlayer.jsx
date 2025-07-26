@@ -32,6 +32,9 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [editableDescription, setEditableDescription] = useState('');
   const [editableProsody1, setEditableProsody1] = useState('');
   const [editableProsody2, setEditableProsody2] = useState('');
+  
+  // Estado para mostrar feedback de guardado
+  const [saveStatus, setSaveStatus] = useState({});
 
   // Función para validar el archivo JSON
   const validateJsonFile = (file) => {
@@ -100,9 +103,22 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       return { description: '', prosody1: '', prosody2: '' };
     }
     
-    // Buscar el segmento completo en projectData para obtener descriptions_prosody
-    const fullSegment = projectData?.segments?.find(s => s._id === segment._id);
-    console.log('🔍 getUserDescriptionProsody - Segmento completo desde projectData:', fullSegment);
+    // Primero intentar obtener datos del localStorage (más actualizados)
+    const storedProject = localStorage.getItem('currentProject');
+    let fullSegment = null;
+    
+    if (storedProject) {
+      const project = JSON.parse(storedProject);
+      fullSegment = project.segments?.find(s => s._id === segment._id);
+      console.log('🔍 getUserDescriptionProsody - Segmento desde localStorage:', fullSegment);
+    }
+    
+    // Si no está en localStorage, usar projectData
+    if (!fullSegment) {
+      fullSegment = projectData?.segments?.find(s => s._id === segment._id);
+      console.log('🔍 getUserDescriptionProsody - Segmento desde projectData:', fullSegment);
+    }
+    
     console.log('🔍 getUserDescriptionProsody - descriptions_prosody:', fullSegment?.descriptions_prosody);
     
     if (!fullSegment || !fullSegment.descriptions_prosody) {
@@ -134,6 +150,20 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setSegments(propSegments);
     }
   }, [propSegments]);
+
+  // Cargar datos del localStorage al inicio si están disponibles
+  useEffect(() => {
+    const storedSegments = localStorage.getItem('currentSegments');
+    if (storedSegments && !propSegments.length) {
+      try {
+        const parsedSegments = JSON.parse(storedSegments);
+        console.log('📦 Cargando segmentos desde localStorage:', parsedSegments.length);
+        setSegments(parsedSegments);
+      } catch (error) {
+        console.error('❌ Error cargando segmentos desde localStorage:', error);
+      }
+    }
+  }, [propSegments.length]);
 
   // Actualizar campos editables cuando cambia el segmento actual o el usuario
   useEffect(() => {
@@ -509,7 +539,86 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     const segmentId = segments[currentSegmentIdx]._id;
     const userId = user._id;
     const timestamp = new Date().toISOString();
+    
+    // Mostrar estado de guardando
+    setSaveStatus(prev => ({ ...prev, [fieldName]: 'saving' }));
+    
     try {
+      // Actualizar localmente primero para feedback inmediato
+      if (projectData && projectData._id) {
+        // Buscar el proyecto en localStorage y actualizarlo
+        const storedProject = localStorage.getItem('currentProject');
+        if (storedProject) {
+          const project = JSON.parse(storedProject);
+          const updatedProject = {
+            ...project,
+            segments: project.segments.map(segment => {
+              if (segment._id !== segmentId) return segment;
+              
+              // Crear o actualizar descriptions_prosody
+              const existingDescriptionsProsody = segment.descriptions_prosody || [];
+              const existingUserIndex = existingDescriptionsProsody.findIndex(
+                entry => entry.user_id === userId
+              );
+              
+              let updatedDescriptionsProsody;
+              if (existingUserIndex >= 0) {
+                // Actualizar entrada existente del usuario
+                updatedDescriptionsProsody = [...existingDescriptionsProsody];
+                updatedDescriptionsProsody[existingUserIndex] = {
+                  ...updatedDescriptionsProsody[existingUserIndex],
+                  [fieldName]: fieldValue,
+                  timestamp: timestamp
+                };
+              } else {
+                // Crear nueva entrada para el usuario
+                updatedDescriptionsProsody = [
+                  ...existingDescriptionsProsody,
+                  {
+                    user_id: userId,
+                    [fieldName]: fieldValue,
+                    timestamp: timestamp
+                  }
+                ];
+              }
+              
+              return {
+                ...segment,
+                descriptions_prosody: updatedDescriptionsProsody
+              };
+            })
+          };
+          
+          // Guardar en localStorage
+          localStorage.setItem('currentProject', JSON.stringify(updatedProject));
+          
+          // Actualizar también los segmentos en localStorage
+          const updatedSegments = updatedProject.segments.map((segment, index) => ({
+            id: index + 1,
+            start: segment.start_time * 1000,
+            end: segment.end_time * 1000,
+            duration: segment.duration || (segment.end_time - segment.start_time),
+            description: segment.description || '',
+            prosody: segment.prosody || '',
+            prosody2: segment.prosody2 || '',
+            views: segment.views || 0,
+            likes: segment.likes || 0,
+            _id: segment._id,
+            projectid: segment.project_id,
+            descriptions_prosody: segment.descriptions_prosody || []
+          }));
+          
+          localStorage.setItem('currentSegments', JSON.stringify(updatedSegments));
+          
+          // Forzar re-renderizado actualizando el estado local
+          setSegments(updatedSegments);
+          
+          // Mostrar estado de guardado local
+          setSaveStatus(prev => ({ ...prev, [fieldName]: 'saved-local' }));
+        }
+      }
+      
+      // Enviar a la base de datos
       await apiService.postDescriptionProsody({
         segmentId,
         userId,
@@ -517,10 +626,32 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         fieldValue,
         timestamp
       });
-      // Opcional: feedback visual o log
-      console.log(`Campo ${fieldName} guardado correctamente.`);
+      
+      // Mostrar estado de guardado completo
+      setSaveStatus(prev => ({ ...prev, [fieldName]: 'saved' }));
+      
+      // Limpiar el estado después de 2 segundos
+      setTimeout(() => {
+        setSaveStatus(prev => {
+          const newStatus = { ...prev };
+          delete newStatus[fieldName];
+          return newStatus;
+        });
+      }, 2000);
+      
+      console.log(`✅ Campo ${fieldName} guardado localmente y en la base de datos.`);
     } catch (err) {
-      console.error(`Error guardando ${fieldName}:`, err);
+      console.error(`❌ Error guardando ${fieldName}:`, err);
+      setSaveStatus(prev => ({ ...prev, [fieldName]: 'error' }));
+      
+      // Limpiar el estado de error después de 3 segundos
+      setTimeout(() => {
+        setSaveStatus(prev => {
+          const newStatus = { ...prev };
+          delete newStatus[fieldName];
+          return newStatus;
+        });
+      }, 3000);
     }
   };
 
@@ -810,7 +941,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   padding: '0.75em', 
                   borderRadius: '8px',
                   border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
-                  marginBottom: '0.75em'
+                  marginBottom: '0.75em',
+                  position: 'relative'
                 }}>
                   <label style={{ 
                     display: 'block', 
@@ -819,6 +951,22 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                   }}>
                     Descripción:
+                    {saveStatus['description'] && (
+                      <span style={{
+                        marginLeft: '0.5em',
+                        fontSize: '0.8em',
+                        fontWeight: 'normal',
+                        color: saveStatus['description'] === 'saving' ? '#f59e0b' :
+                               saveStatus['description'] === 'saved-local' ? '#10b981' :
+                               saveStatus['description'] === 'saved' ? '#059669' :
+                               saveStatus['description'] === 'error' ? '#ef4444' : '#6b7280'
+                      }}>
+                        {saveStatus['description'] === 'saving' ? '⏳ Guardando...' :
+                         saveStatus['description'] === 'saved-local' ? '💾 Guardado localmente' :
+                         saveStatus['description'] === 'saved' ? '✅ Guardado' :
+                         saveStatus['description'] === 'error' ? '❌ Error' : ''}
+                      </span>
+                    )}
                   </label>
                   <textarea
                     value={editableDescription}
@@ -862,6 +1010,22 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                     }}>
                       Prosody 1:
+                      {saveStatus['prosody 1'] && (
+                        <span style={{
+                          marginLeft: '0.5em',
+                          fontSize: '0.8em',
+                          fontWeight: 'normal',
+                          color: saveStatus['prosody 1'] === 'saving' ? '#f59e0b' :
+                                 saveStatus['prosody 1'] === 'saved-local' ? '#10b981' :
+                                 saveStatus['prosody 1'] === 'saved' ? '#059669' :
+                                 saveStatus['prosody 1'] === 'error' ? '#ef4444' : '#6b7280'
+                        }}>
+                          {saveStatus['prosody 1'] === 'saving' ? '⏳ Guardando...' :
+                           saveStatus['prosody 1'] === 'saved-local' ? '💾 Guardado localmente' :
+                           saveStatus['prosody 1'] === 'saved' ? '✅ Guardado' :
+                           saveStatus['prosody 1'] === 'error' ? '❌ Error' : ''}
+                        </span>
+                      )}
                     </label>
                     <input
                       type="text"
@@ -899,6 +1063,22 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                     }}>
                       Prosody 2:
+                      {saveStatus['prosody 2'] && (
+                        <span style={{
+                          marginLeft: '0.5em',
+                          fontSize: '0.8em',
+                          fontWeight: 'normal',
+                          color: saveStatus['prosody 2'] === 'saving' ? '#f59e0b' :
+                                 saveStatus['prosody 2'] === 'saved-local' ? '#10b981' :
+                                 saveStatus['prosody 2'] === 'saved' ? '#059669' :
+                                 saveStatus['prosody 2'] === 'error' ? '#ef4444' : '#6b7280'
+                        }}>
+                          {saveStatus['prosody 2'] === 'saving' ? '⏳ Guardando...' :
+                           saveStatus['prosody 2'] === 'saved-local' ? '💾 Guardado localmente' :
+                           saveStatus['prosody 2'] === 'saved' ? '✅ Guardado' :
+                           saveStatus['prosody 2'] === 'error' ? '❌ Error' : ''}
+                        </span>
+                      )}
                     </label>
                     <input
                       type="text"
