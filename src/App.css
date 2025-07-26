@@ -62,7 +62,6 @@ html, body {
   align-items: center;
   justify-content: flex-start;
   padding: 2.5rem 0 3rem 0;
-  overflow-y: auto;
 }
 
 .vsp-container {

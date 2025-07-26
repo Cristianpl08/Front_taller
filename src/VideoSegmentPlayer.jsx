@@ -436,8 +436,6 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
   return (
     <div className="vsp-bg" style={{ 
-      overflowY: 'auto', 
-      maxHeight: '100vh',
       padding: '20px'
     }}>
       {waveLoading && (
