@@ -178,8 +178,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       try {
         wavesurferRef.current = WaveSurfer.create({
           container: "#waveform",
-          waveColor: "#ddd",
-          progressColor: "#2196f3",
+          waveColor: "#8B7355",
+          progressColor: "#FF8C00",
           height: 80,
           responsive: true,
           backend: "WebAudio",
