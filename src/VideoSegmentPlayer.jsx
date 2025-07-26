@@ -4,6 +4,7 @@ import WaveSurfer from "wavesurfer.js";
 import "./App.css";
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import TimelinePlugin from 'wavesurfer.js/dist/plugins/timeline.esm.js';
+import { processCloudinaryUrl, isCloudinaryUrl, generateAudioUrl, getOriginalCloudinaryUrl } from './utils/cloudinaryHelper.js';
 
 function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData }) {
   const videoRef = useRef(null);
@@ -84,7 +85,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   }, [propSegments]);
 
-  // Resetear estado de carga cuando cambian los datos del proyecto
+          // Resetear estado de carga cuando cambian los datos del proyecto
   useEffect(() => {
     if (projectData) {
       setIsFullyLoaded(false);
@@ -96,24 +97,26 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     if (projectData && projectData.video) {
       console.log("🎬 Cargando video del proyecto:", projectData.video);
       
-      // Función para procesar URL de Google Drive
-      const processGoogleDriveUrl = (url) => {
-        if (url.includes('drive.google.com')) {
-          // Convertir URL de vista a URL de descarga directa
-          const fileId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
-          if (fileId) {
-            return `https://drive.google.com/uc?export=download&id=${fileId}`;
-          }
-        }
-        return url;
-      };
-      
-      const processedVideoUrl = processGoogleDriveUrl(projectData.video);
-      console.log("🔗 URL procesada:", processedVideoUrl);
-      
-      setVideoUrl(processedVideoUrl);
-      setAudioUrl(processedVideoUrl);
-      setWaveLoading(true);
+      // Procesar URL según el servicio detectado
+      let processedVideoUrl = projectData.video;
+      let processedAudioUrl = projectData.video;
+
+      if (isCloudinaryUrl(projectData.video)) {
+        console.log("☁️ Detectada URL de Cloudinary, procesando...");
+        processedVideoUrl = processCloudinaryUrl(projectData.video);
+        processedAudioUrl = generateAudioUrl(projectData.video);
+        console.log("✅ URLs procesadas para Cloudinary:", { video: processedVideoUrl, audio: processedAudioUrl });
+        
+        setVideoUrl(processedVideoUrl);
+        setAudioUrl(processedAudioUrl);
+        setWaveLoading(true);
+      } else {
+        // URL directa o de otro servicio
+        console.log("🔗 URL directa detectada:", projectData.video);
+        setVideoUrl(processedVideoUrl);
+        setAudioUrl(processedAudioUrl);
+        setWaveLoading(true);
+      }
     }
   }, [projectData]);
 
@@ -237,19 +240,15 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       wavesurferRef.current.on('error', (error) => {
         console.error("Error en WaveSurfer:", error);
         setWaveLoading(false);
-        
-        // Mostrar mensaje de error más específico
-        if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
-          console.error("❌ Error de CORS al cargar el video. El servidor de Google Drive puede estar bloqueando la carga.");
-        } else if (error.message.includes('404')) {
-          console.error("❌ Video no encontrado. Verifica que la URL del video sea correcta.");
-        } else {
-          console.error("❌ Error desconocido al cargar el video:", error.message);
-        }
       });
 
       wavesurferRef.current.on('loading', (progress) => {
         console.log("Cargando WaveSurfer:", progress * 100 + "%");
+      });
+
+      wavesurferRef.current.on('ready', () => {
+        console.log("✅ WaveSurfer cargado exitosamente");
+        setWaveLoading(false);
       });
 
       // Evento cuando el usuario hace clic en una región
@@ -513,6 +512,10 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           </p>
         </div>
       )}
+
+
+
+
 
       {/* Input de archivo JSON al inicio (solo si no hay proyecto cargado) */}
       {!projectData && !jsonFile && !videoUrl && (
