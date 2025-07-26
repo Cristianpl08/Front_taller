@@ -712,36 +712,42 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               </div>
               
               {/* Sección Nueva (Editable) */}
-              <div>
+              <div style={{
+                opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                transition: 'opacity 0.3s ease'
+              }}>
                 <div className="vsp-field-editable-block" style={{ 
-                  background: 'rgba(59,130,246,0.05)', 
+                  background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
                   padding: '0.75em', 
                   borderRadius: '8px',
-                  border: '1px solid rgba(59,130,246,0.2)',
+                  border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
                   marginBottom: '0.75em'
                 }}>
                   <label style={{ 
                     display: 'block', 
                     marginBottom: '0.5em', 
                     fontWeight: 'bold',
-                    color: '#1e293b'
+                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                   }}>
                     Descripción:
                   </label>
                   <textarea
                     placeholder="Escribe aquí la nueva descripción..."
+                    disabled={currentSegmentIdx === -1}
                     style={{
                       width: '100%',
                       minHeight: '40px',
                       maxHeight: '60px',
                       padding: '0.4em',
-                      border: '1px solid #cbd5e1',
+                      border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
                       borderRadius: '4px',
                       resize: 'vertical',
                       fontFamily: 'inherit',
                       fontSize: '14px',
-                      background: '#ffffff',
-                      color: '#000',
+                      background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                      cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
                       boxSizing: 'border-box'
                     }}
                   />
@@ -753,31 +759,33 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 }}>
                   <div className="vsp-field-editable-block" style={{ 
                     flex: '1',
-                    background: 'rgba(59,130,246,0.05)', 
+                    background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
                     padding: '0.75em', 
                     borderRadius: '8px',
-                    border: '1px solid rgba(59,130,246,0.2)'
+                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
                   }}>
                     <label style={{ 
                       display: 'block', 
                       marginBottom: '0.5em', 
                       fontWeight: 'bold',
-                      color: '#1e293b'
+                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                     }}>
                       Prosody 1:
                     </label>
                     <input
                       type="text"
                       placeholder="Escribe aquí la emoción principal..."
+                      disabled={currentSegmentIdx === -1}
                       style={{
                         width: '100%',
                         padding: '0.4em',
-                        border: '1px solid #cbd5e1',
+                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
                         borderRadius: '4px',
                         fontFamily: 'inherit',
                         fontSize: '14px',
-                        background: '#ffffff',
-                        color: '#000',
+                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
                         boxSizing: 'border-box'
                       }}
                     />
@@ -785,31 +793,33 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   
                   <div className="vsp-field-editable-block" style={{ 
                     flex: '1',
-                    background: 'rgba(59,130,246,0.05)', 
+                    background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
                     padding: '0.75em', 
                     borderRadius: '8px',
-                    border: '1px solid rgba(59,130,246,0.2)'
+                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
                   }}>
                     <label style={{ 
                       display: 'block', 
                       marginBottom: '0.5em', 
                       fontWeight: 'bold',
-                      color: '#1e293b'
+                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                     }}>
                       Prosody 2:
                     </label>
                     <input
                       type="text"
                       placeholder="Escribe aquí la emoción secundaria..."
+                      disabled={currentSegmentIdx === -1}
                       style={{
                         width: '100%',
                         padding: '0.4em',
-                        border: '1px solid #cbd5e1',
+                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
                         borderRadius: '4px',
                         fontFamily: 'inherit',
                         fontSize: '14px',
-                        background: '#ffffff',
-                        color: '#000',
+                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
                         boxSizing: 'border-box'
                       }}
                     />
