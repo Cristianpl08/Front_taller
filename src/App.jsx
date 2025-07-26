@@ -196,10 +196,10 @@ function App() {
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
               <div>
-                <h1 style={{ margin: '0', fontSize: '2rem' }}>🎬 Video Segment Player</h1>
+                <h1 style={{ margin: '0', fontSize: '2rem' }}>🎬 Taller</h1>
                 {projectData && (
                   <p style={{ margin: '0.5rem 0 0 0', opacity: '0.9' }}>
-                    Proyecto: {projectData.name || 'Sin nombre'} | {segments.length} segmentos disponibles
+                    {segments.length} segmentos disponibles
                   </p>
                 )}
               </div>
@@ -252,35 +252,7 @@ function App() {
               </div>
             )}
 
-            {/* Información del proyecto cargado */}
-            {projectData && (
-              <div style={{
-                background: 'rgba(34, 197, 94, 0.1)',
-                border: '1px solid #22c55e',
-                borderRadius: '8px',
-                padding: '1rem',
-                margin: '1rem 2rem',
-                color: '#166534'
-              }}>
-                <h3 style={{ margin: '0 0 0.5rem 0' }}>✅ Proyecto cargado automáticamente</h3>
-                <p style={{ margin: '0', fontSize: '0.9rem' }}>
-                  <strong>{segments.length} segmentos</strong> cargados desde la API | 
-                  <button
-                    onClick={() => loadProjectData(API_CONFIG.PROJECT_ID)}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#166534',
-                      textDecoration: 'underline',
-                      cursor: 'pointer',
-                      marginLeft: '0.5rem'
-                    }}
-                  >
-                    Recargar datos
-                  </button>
-                </p>
-              </div>
-            )}
+
 
             {/* Componente principal del reproductor */}
             <VideoSegmentPlayer 

@@ -435,7 +435,11 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   };
 
   return (
-    <div className="vsp-bg">
+    <div className="vsp-bg" style={{ 
+      overflowY: 'auto', 
+      maxHeight: '100vh',
+      padding: '20px'
+    }}>
       {waveLoading && (
         <div className="vsp-loading-overlay">
           <div style={{
@@ -460,58 +464,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           </div>
         </div>
       )}
-      {/* Información del proyecto cuando está disponible */}
-      {projectData && !videoUrl && !isFullyLoaded && (
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '1em', 
-          margin: '2em 0',
-          padding: '2em',
-          background: 'rgba(34, 197, 94, 0.1)',
-          borderRadius: '10px',
-          border: '1px solid #22c55e'
-        }}>
-          <h3 style={{ margin: '0', color: '#166534' }}>✓ Proyecto cargado automáticamente</h3>
-          <p style={{ margin: '0', color: '#166534', textAlign: 'center' }}>
-            {projectData.name || 'Proyecto sin nombre'}
-          </p>
-          {projectData.videoUrl ? (
-            <p style={{ margin: '0.5em 0 0 0', color: '#166534', fontSize: '0.9em' }}>
-              🎬 Video y wave surfer se cargarán automáticamente...
-            </p>
-          ) : (
-            <p style={{ margin: '0.5em 0 0 0', color: '#dc2626', fontSize: '0.9em' }}>
-              ⚠️ No se encontró URL del video en el proyecto
-            </p>
-          )}
-        </div>
-      )}
 
-      {/* Mensaje de éxito cuando todo está cargado */}
-      {isFullyLoaded && projectData && (
-        <div style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          alignItems: 'center', 
-          gap: '1em', 
-          margin: '2em 0',
-          padding: '2em',
-          background: 'rgba(34, 197, 94, 0.1)',
-          borderRadius: '10px',
-          border: '1px solid #22c55e',
-          animation: 'fadeIn 0.5s ease-in'
-        }}>
-          <h3 style={{ margin: '0', color: '#166534' }}>🎉 ¡Todo listo!</h3>
-          <p style={{ margin: '0', color: '#166534', textAlign: 'center' }}>
-            Video y wave surfer cargados automáticamente
-          </p>
-          <p style={{ margin: '0.5em 0 0 0', color: '#166534', fontSize: '0.9em' }}>
-            {segments.length} segmentos disponibles | ¡Ya puedes reproducir!
-          </p>
-        </div>
-      )}
 
 
 
