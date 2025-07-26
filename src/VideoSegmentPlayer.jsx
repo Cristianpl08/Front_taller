@@ -7,6 +7,7 @@ import TimelinePlugin from 'wavesurfer.js/dist/plugins/timeline.esm.js';
 import { processCloudinaryUrl, isCloudinaryUrl, generateAudioUrl, getOriginalCloudinaryUrl } from './utils/cloudinaryHelper.js';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import ArrowRightIcon from '@mui/icons-material/ArrowRight';
+import { useAuth } from './contexts/AuthContext.jsx';
 
 function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData }) {
   const videoRef = useRef(null);
@@ -22,6 +23,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [jsonFile, setJsonFile] = useState(null); // Estado para el archivo JSON subido
   const [jsonValidation, setJsonValidation] = useState({ isValid: false, message: '' }); // Estado para validación
   const [isFullyLoaded, setIsFullyLoaded] = useState(false); // Estado para indicar que todo está cargado
+  
+  // Obtener el usuario actual del contexto de autenticación
+  const { user } = useAuth();
+  
+  // Estados para los campos editables
+  const [editableDescription, setEditableDescription] = useState('');
+  const [editableProsody1, setEditableProsody1] = useState('');
+  const [editableProsody2, setEditableProsody2] = useState('');
 
   // Función para validar el archivo JSON
   const validateJsonFile = (file) => {
@@ -80,12 +89,68 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
   // Los segmentos ahora vienen de la API, no se cargan archivos locales
 
+  // Función para obtener los datos del usuario actual del array descriptions_prosody
+  const getUserDescriptionProsody = (segment) => {
+    console.log('🔍 getUserDescriptionProsody - Usuario:', user?._id);
+    console.log('🔍 getUserDescriptionProsody - Segmento:', segment);
+    
+    if (!user || !segment) {
+      console.log('❌ No hay usuario o segmento');
+      return { description: '', prosody1: '', prosody2: '' };
+    }
+    
+    // Buscar el segmento completo en projectData para obtener descriptions_prosody
+    const fullSegment = projectData?.segments?.find(s => s._id === segment._id);
+    console.log('🔍 getUserDescriptionProsody - Segmento completo desde projectData:', fullSegment);
+    console.log('🔍 getUserDescriptionProsody - descriptions_prosody:', fullSegment?.descriptions_prosody);
+    
+    if (!fullSegment || !fullSegment.descriptions_prosody) {
+      console.log('❌ No hay segmento completo o descriptions_prosody');
+      return { description: '', prosody1: '', prosody2: '' };
+    }
+    
+    const userEntry = fullSegment.descriptions_prosody.find(entry => entry.user_id === user._id);
+    console.log('🔍 getUserDescriptionProsody - Entrada del usuario encontrada:', userEntry);
+    
+    if (!userEntry) {
+      console.log('❌ No se encontró entrada para el usuario actual');
+      return { description: '', prosody1: '', prosody2: '' };
+    }
+    
+    const result = {
+      description: userEntry.description || '',
+      prosody1: userEntry['prosody 1'] || '',
+      prosody2: userEntry['prosody 2'] || ''
+    };
+    
+    console.log('✅ getUserDescriptionProsody - Resultado:', result);
+    return result;
+  };
+
   // Actualizar segmentos cuando cambian las props
   useEffect(() => {
     if (propSegments.length > 0) {
       setSegments(propSegments);
     }
   }, [propSegments]);
+
+  // Actualizar campos editables cuando cambia el segmento actual o el usuario
+  useEffect(() => {
+    if (currentSegmentIdx >= 0 && segments[currentSegmentIdx]) {
+      const currentSegment = segments[currentSegmentIdx];
+      console.log('Segmento activo:', currentSegment); // <-- LOG NUEVO
+      const userData = getUserDescriptionProsody(currentSegment);
+      
+      setEditableDescription(userData.description);
+      setEditableProsody1(userData.prosody1);
+      setEditableProsody2(userData.prosody2);
+    } else {
+      // Limpiar campos si no hay segmento seleccionado
+      setEditableDescription('');
+      setEditableProsody1('');
+      setEditableProsody2('');
+    }
+  }, [currentSegmentIdx, segments, user]);
 
           // Resetear estado de carga cuando cambian los datos del proyecto
   useEffect(() => {
@@ -733,6 +798,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     Descripción:
                   </label>
                   <textarea
+                    value={editableDescription}
+                    onChange={(e) => setEditableDescription(e.target.value)}
                     placeholder="Escribe aquí la nueva descripción..."
                     disabled={currentSegmentIdx === -1}
                     style={{
@@ -774,6 +841,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     </label>
                     <input
                       type="text"
+                      value={editableProsody1}
+                      onChange={(e) => setEditableProsody1(e.target.value)}
                       placeholder="Escribe aquí la emoción principal..."
                       disabled={currentSegmentIdx === -1}
                       style={{
@@ -808,6 +877,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     </label>
                     <input
                       type="text"
+                      value={editableProsody2}
+                      onChange={(e) => setEditableProsody2(e.target.value)}
                       placeholder="Escribe aquí la emoción secundaria..."
                       disabled={currentSegmentIdx === -1}
                       style={{
