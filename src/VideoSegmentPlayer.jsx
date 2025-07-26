@@ -580,52 +580,57 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               display: 'flex', 
               flexDirection: 'column', 
               gap: '1em',
-              minWidth: '300px'
+              minWidth: '300px',
+              opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+              pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+              transition: 'opacity 0.3s ease'
             }}>
               <div style={{ 
-                background: 'rgba(30,41,59,0.1)', 
+                background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
                 padding: '1em', 
                 borderRadius: '8px',
-                border: '1px solid rgba(30,41,59,0.2)'
+                border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
               }}>
                 <label style={{ 
                   display: 'block', 
                   marginBottom: '0.5em', 
                   fontWeight: 'bold',
-                  color: '#1e293b'
+                  color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                 }}>
                   Descripción:
                 </label>
                 <textarea
                   value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.description || '' : ''}
                   readOnly
+                  disabled={currentSegmentIdx === -1}
                   style={{
                     width: '100%',
                     minHeight: '80px',
                     padding: '0.5em',
-                    border: '1px solid #cbd5e1',
+                    border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
                     borderRadius: '4px',
                     resize: 'vertical',
                     fontFamily: 'inherit',
                     fontSize: '14px',
-                    background: '#f8f9fa',
-                    color: '#000'
+                    background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                    cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default'
                   }}
                   placeholder="Sin descripción disponible"
                 />
               </div>
               
               <div style={{ 
-                background: 'rgba(30,41,59,0.1)', 
+                background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
                 padding: '1em', 
                 borderRadius: '8px',
-                border: '1px solid rgba(30,41,59,0.2)'
+                border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
               }}>
                 <label style={{ 
                   display: 'block', 
                   marginBottom: '0.5em', 
                   fontWeight: 'bold',
-                  color: '#1e293b'
+                  color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                 }}>
                   Emoción Principal (Prosody):
                 </label>
@@ -633,31 +638,33 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   type="text"
                   value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody || '' : ''}
                   readOnly
+                  disabled={currentSegmentIdx === -1}
                   style={{
                     width: '100%',
                     padding: '0.5em',
-                    border: '1px solid #cbd5e1',
+                    border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
                     borderRadius: '4px',
                     fontFamily: 'inherit',
                     fontSize: '14px',
-                    background: '#f8f9fa',
-                    color: '#000'
+                    background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                    cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default'
                   }}
                   placeholder="Sin emoción principal"
                 />
               </div>
               
               <div style={{ 
-                background: 'rgba(30,41,59,0.1)', 
+                background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
                 padding: '1em', 
                 borderRadius: '8px',
-                border: '1px solid rgba(30,41,59,0.2)'
+                border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
               }}>
                 <label style={{ 
                   display: 'block', 
                   marginBottom: '0.5em', 
                   fontWeight: 'bold',
-                  color: '#1e293b'
+                  color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                 }}>
                   Emoción Secundaria (Prosody 2):
                 </label>
@@ -665,15 +672,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   type="text"
                   value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody2 || '' : ''}
                   readOnly
+                  disabled={currentSegmentIdx === -1}
                   style={{
                     width: '100%',
                     padding: '0.5em',
-                    border: '1px solid #cbd5e1',
+                    border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
                     borderRadius: '4px',
                     fontFamily: 'inherit',
                     fontSize: '14px',
-                    background: '#f8f9fa',
-                    color: '#000'
+                    background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                    cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default'
                   }}
                   placeholder="Sin emoción secundaria"
                 />
