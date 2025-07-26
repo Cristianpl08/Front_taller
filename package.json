@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+  "build": "vite build --debug",
     "lint": "eslint .",
+    
     "preview": "vite preview",
     "setup": "node setup-env.js"
   },
