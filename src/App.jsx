@@ -20,7 +20,24 @@ function App() {
   useEffect(() => {
     const checkAuth = async () => {
       if (isAuthenticated) {
-        await loadProjectData();
+        // Intentar cargar datos del proyecto desde localStorage primero
+        const savedProject = localStorage.getItem('currentProject');
+        const savedSegments = localStorage.getItem('currentSegments');
+        
+        if (savedProject && savedSegments) {
+          try {
+            console.log('📦 Cargando datos del proyecto desde localStorage...');
+            setProjectData(JSON.parse(savedProject));
+            setSegments(JSON.parse(savedSegments));
+            setCurrentView('player'); // Ir directamente al reproductor
+            console.log('✅ Datos cargados desde localStorage, mostrando reproductor');
+          } catch (error) {
+            console.error('Error cargando datos desde localStorage:', error);
+            await loadProjectData();
+          }
+        } else {
+          await loadProjectData();
+        }
       }
       setLoading(false);
     };
@@ -36,17 +53,17 @@ function App() {
       
       console.log("📡 Cargando datos del proyecto:", projectId);
       
-      // Cargar proyecto
+      // Cargar proyecto (que incluye los segmentos)
       const project = await apiService.getProject(projectId);
       console.log("✅ Proyecto cargado:", project);
       setProjectData(project);
       
-      // Cargar segmentos del proyecto específico
-      const segmentsData = await apiService.getSegments(projectId);
-      console.log("✅ Segmentos cargados:", segmentsData.data?.segments?.length || 0, "segmentos");
+      // Los segmentos vienen incluidos en la respuesta del proyecto
+      const segmentsFromProject = project.segments || [];
+      console.log("✅ Segmentos cargados:", segmentsFromProject.length, "segmentos");
       
       // Transformar los segmentos para que sean compatibles con el formato esperado
-      const transformedSegments = (segmentsData.data?.segments || []).map((segment, index) => ({
+      const transformedSegments = segmentsFromProject.map((segment, index) => ({
         id: index + 1, // ID numérico para compatibilidad
         start: segment.start_time * 1000, // Convertir a milisegundos
         end: segment.end_time * 1000, // Convertir a milisegundos
@@ -61,6 +78,7 @@ function App() {
       }));
       
       setSegments(transformedSegments);
+      setCurrentView('player'); // Ir al reproductor después de cargar los datos
       console.log("🎯 Video y wave surfer se cargarán automáticamente");
     } catch (error) {
       console.error('Error loading project data:', error);
@@ -130,7 +148,16 @@ function App() {
             animation: 'spin 1s linear infinite',
             margin: '0 auto 1rem'
           }}></div>
-          <p>{authLoading ? 'Verificando autenticación...' : 'Cargando...'}</p>
+          <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>
+            {authLoading ? '🔐 Verificando autenticación...' : '🚀 Cargando proyecto automáticamente...'}
+          </h3>
+          {!authLoading && loading && (
+            <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
+              <p style={{ margin: '0.5rem 0' }}>📡 Conectando con el servidor...</p>
+              <p style={{ margin: '0.5rem 0' }}>📁 Obteniendo datos del proyecto...</p>
+              <p style={{ margin: '0.5rem 0' }}>🎬 Preparando reproductor de video...</p>
+            </div>
+          )}
         </div>
       </div>
     );

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '../services/api.js';
 import { setupAuthInterceptor } from '../utils/authInterceptor.js';
+import { API_CONFIG } from '../config.js';
 
 const AuthContext = createContext();
 
@@ -51,6 +52,41 @@ export const AuthProvider = ({ children }) => {
         apiService.updateToken();
         setIsAuthenticated(true);
         setUser(response.data?.user || response.user);
+        
+        // Después del login exitoso, cargar automáticamente el proyecto
+        try {
+          console.log('🚀 Cargando proyecto automáticamente después del login...');
+          const projectId = API_CONFIG.PROJECT_ID;
+          const project = await apiService.getProject(projectId);
+          console.log('✅ Proyecto cargado automáticamente:', project);
+          
+          // Guardar el proyecto en localStorage para que esté disponible inmediatamente
+          localStorage.setItem('currentProject', JSON.stringify(project));
+          
+          // Cargar también los segmentos
+          const segmentsData = await apiService.getSegments(projectId);
+          const transformedSegments = (segmentsData.data?.segments || []).map((segment, index) => ({
+            id: index + 1,
+            start: segment.start_time * 1000,
+            end: segment.end_time * 1000,
+            duration: segment.duration || (segment.end_time - segment.start_time),
+            description: segment.description || '',
+            prosody: segment.prosody || '',
+            prosody2: segment.prosody2 || '',
+            views: segment.views || 0,
+            likes: segment.likes || 0,
+            _id: segment._id,
+            projectid: segment.project_id
+          }));
+          
+          localStorage.setItem('currentSegments', JSON.stringify(transformedSegments));
+          console.log('✅ Segmentos cargados automáticamente:', transformedSegments.length);
+          
+        } catch (projectError) {
+          console.error('⚠️ Error cargando proyecto automáticamente:', projectError);
+          // No fallar el login si hay error cargando el proyecto
+        }
+        
         return { success: true };
       } else {
         console.log('❌ Login fallido');

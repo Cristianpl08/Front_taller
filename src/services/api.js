@@ -130,16 +130,7 @@ class ApiService {
     }
   }
 
-  // Obtener todos los segmentos
-  async getSegments(projectId = API_CONFIG.PROJECT_ID) {
-    try {
-      console.log('📡 Obteniendo segmentos para el proyecto:', projectId);
-      return await this.request(API_ENDPOINTS.SEGMENTS(projectId));
-    } catch (error) {
-      console.error('Failed to get segments:', error);
-      throw error;
-    }
-  }
+
 
   // Verificar si el usuario está autenticado
   isAuthenticated() {

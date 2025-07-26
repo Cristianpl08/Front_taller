@@ -93,10 +93,26 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
   // Cargar video del proyecto cuando esté disponible
   useEffect(() => {
-    if (projectData && projectData.videoUrl) {
-      console.log("🎬 Cargando video del proyecto:", projectData.videoUrl);
-      setVideoUrl(projectData.videoUrl);
-      setAudioUrl(projectData.videoUrl);
+    if (projectData && projectData.video) {
+      console.log("🎬 Cargando video del proyecto:", projectData.video);
+      
+      // Función para procesar URL de Google Drive
+      const processGoogleDriveUrl = (url) => {
+        if (url.includes('drive.google.com')) {
+          // Convertir URL de vista a URL de descarga directa
+          const fileId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)?.[1];
+          if (fileId) {
+            return `https://drive.google.com/uc?export=download&id=${fileId}`;
+          }
+        }
+        return url;
+      };
+      
+      const processedVideoUrl = processGoogleDriveUrl(projectData.video);
+      console.log("🔗 URL procesada:", processedVideoUrl);
+      
+      setVideoUrl(processedVideoUrl);
+      setAudioUrl(processedVideoUrl);
       setWaveLoading(true);
     }
   }, [projectData]);
@@ -137,14 +153,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     if (audioUrl && projectData && !wavesurferRef.current) {
       console.log("Iniciando creación de WaveSurfer...");
       
-      // Verificar que el contenedor existe
-      const container = document.getElementById("waveform");
-      console.log("Contenedor waveform encontrado:", container);
-      
-      if (!container) {
-        console.error("No se encontró el contenedor #waveform");
-        return;
-      }
+      // Función para inicializar WaveSurfer con retraso para asegurar que el DOM esté listo
+      const initializeWaveSurfer = () => {
+        // Verificar que el contenedor existe
+        const container = document.getElementById("waveform");
+        console.log("Contenedor waveform encontrado:", container);
+        
+        if (!container) {
+          console.error("No se encontró el contenedor #waveform, reintentando en 100ms...");
+          setTimeout(initializeWaveSurfer, 100);
+          return;
+        }
 
       const regionsPlugin = RegionsPlugin.create();
       const timelinePlugin = TimelinePlugin.create();
@@ -208,11 +227,25 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         setWaveLoading(false);
         setIsFullyLoaded(true);
         console.log("🎉 ¡Todo cargado exitosamente! Video y wave surfer listos para usar.");
+        
+        // Mostrar notificación de éxito
+        if (projectData) {
+          console.log(`✅ Proyecto "${projectData.name || 'Sin nombre'}" cargado con ${segments.length} segmentos`);
+        }
       });
 
       wavesurferRef.current.on('error', (error) => {
         console.error("Error en WaveSurfer:", error);
         setWaveLoading(false);
+        
+        // Mostrar mensaje de error más específico
+        if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
+          console.error("❌ Error de CORS al cargar el video. El servidor de Google Drive puede estar bloqueando la carga.");
+        } else if (error.message.includes('404')) {
+          console.error("❌ Video no encontrado. Verifica que la URL del video sea correcta.");
+        } else {
+          console.error("❌ Error desconocido al cargar el video:", error.message);
+        }
       });
 
       wavesurferRef.current.on('loading', (progress) => {
@@ -266,6 +299,10 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           }
         }
       });
+      };
+      
+      // Inicializar WaveSurfer
+      initializeWaveSurfer();
     }
 
     return () => {
@@ -402,9 +439,25 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     <div className="vsp-bg">
       {waveLoading && (
         <div className="vsp-loading-overlay">
-          <div>
-            <div className="vsp-spinner"></div>
-            {projectData ? 'Cargando video y onda de audio automáticamente...' : 'Cargando onda de audio...'}
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '2rem',
+            borderRadius: '10px',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+            textAlign: 'center',
+            maxWidth: '400px'
+          }}>
+            <div className="vsp-spinner" style={{ margin: '0 auto 1rem' }}></div>
+            <h3 style={{ margin: '0 0 1rem 0', color: '#1e293b' }}>
+              {projectData ? '🎬 Cargando proyecto automáticamente...' : 'Cargando onda de audio...'}
+            </h3>
+            {projectData && (
+              <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
+                <p style={{ margin: '0.5rem 0' }}>📡 Descargando video desde Google Drive...</p>
+                <p style={{ margin: '0.5rem 0' }}>🎵 Generando onda de audio...</p>
+                <p style={{ margin: '0.5rem 0' }}>🎯 Configurando {segments.length} segmentos...</p>
+              </div>
+            )}
           </div>
         </div>
       )}
