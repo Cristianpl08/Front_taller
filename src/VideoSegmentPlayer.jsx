@@ -1663,24 +1663,6 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 )}
               </div>
               
-              {/* Debug: Mostrar tiempos de sincronización */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '0.5rem',
-                padding: '0.5rem',
-                background: 'rgba(239, 68, 68, 0.1)',
-                borderRadius: '4px',
-                fontSize: '0.8rem',
-                color: '#dc2626',
-                border: '1px solid rgba(239, 68, 68, 0.3)'
-              }}>
-                <span>🎬 Video: {formatTime(videoRef.current?.currentTime || 0)}</span>
-                <span>🎵 WaveSurfer: {formatTime(wavesurferRef.current?.getCurrentTime() || 0)}</span>
-                <span>🔄 Sinc: {formatTime(synchronizedTime)}</span>
-              </div>
               <div id="waveform" className="vsp-waveform" />
               <div id="timeline" className="vsp-timeline" />
             </div>
