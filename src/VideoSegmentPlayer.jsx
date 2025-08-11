@@ -290,7 +290,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           progressColor: "#FF8C00",
           height: 80,
           responsive: true,
-          backend: "WebAudio",
+          backend: "MediaElement",
           plugins: [regionsPlugin, timelinePlugin],
           timeline: {
             container: "#timeline"
@@ -304,9 +304,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         return;
       }
 
-      console.log("Cargando audio URL:", audioUrl);
-      wavesurferRef.current.load(audioUrl);
-      setWaveLoading(true);
+              console.log("Cargando audio URL:", audioUrl);
+        if (projectData?.audiofinal) {
+          // Si tenemos audiofinal, conectar WaveSurfer al elemento de audio
+          wavesurferRef.current.load(audioUrl, null, audioRef.current);
+        } else {
+          wavesurferRef.current.load(audioUrl);
+        }
+        setWaveLoading(true);
 
       wavesurferRef.current.on('ready', () => {
         console.log("WaveSurfer está listo!");
@@ -379,7 +384,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       wavesurferRef.current.on('seek', (progress) => {
         if (!isUserSeeking) {
           setIsUserSeeking(true);
-          syncVideoToWaveform(progress);
+          // Sincronizar video con WaveSurfer
+          if (videoRef.current && videoRef.current.duration) {
+            const newTime = progress * videoRef.current.duration;
+            videoRef.current.currentTime = newTime;
+            
+            // Sincronizar audio si está disponible
+            if (audioRef.current && projectData?.audiofinal) {
+              audioRef.current.currentTime = newTime;
+            }
+          }
+          
           // Obtener el tiempo actual del video después del seek
           const video = videoRef.current;
           let currentTime = 0;
@@ -431,7 +446,10 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
     const handleTimeUpdate = () => {
       if (!isUserSeeking && video.duration) {
-        syncWaveformToVideo();
+        // Sincronizar WaveSurfer con el video
+        const progress = video.currentTime / video.duration;
+        wavesurferRef.current.seekTo(progress);
+        
         // Buscar el segmento correspondiente al tiempo actual del video
         const currentTime = video.currentTime;
         const currentTimeMs = currentTime * 1000;
@@ -556,6 +574,42 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     return () => clearInterval(interval);
   }, []);
 
+  // Sincronizar WaveSurfer con el video en tiempo real
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !wavesurferRef.current) return;
+
+    const handleTimeUpdate = () => {
+      if (!isUserSeeking && video.duration) {
+        const progress = video.currentTime / video.duration;
+        wavesurferRef.current.seekTo(progress);
+      }
+    };
+
+    // Sincronizar estado de reproducción
+    const handlePlay = () => {
+      if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
+        wavesurferRef.current.play();
+      }
+    };
+
+    const handlePause = () => {
+      if (wavesurferRef.current && wavesurferRef.current.isPlaying()) {
+        wavesurferRef.current.pause();
+      }
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+    };
+  }, [isUserSeeking]);
+
   // Verificar que los contenedores del DOM estén disponibles
   useEffect(() => {
     console.log("Componente montado, verificando contenedores...");
@@ -585,12 +639,13 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         audioRef.current.currentTime = startInSeconds;
       }
       
-      videoRef.current.play();
-      
+      // Sincronizar WaveSurfer
       if (videoRef.current.duration) {
         const progress = startInSeconds / videoRef.current.duration;
         wavesurferRef.current.seekTo(progress);
       }
+      
+      videoRef.current.play();
       
       setTimeout(() => setIsUserSeeking(false), 200);
     }
@@ -893,19 +948,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 controls={false}
               />
               
-              {/* Indicador de controles personalizados */}
-              <div style={{
-                marginTop: '0.5rem',
-                padding: '0.5rem',
-                background: 'rgba(59, 130, 246, 0.05)',
-                borderRadius: '4px',
-                fontSize: '0.85rem',
-                color: '#1e40af',
-                textAlign: 'center',
-                border: '1px solid rgba(59, 130, 246, 0.2)'
-              }}>
-                🎮 Controles del video en la barra de controles del WaveSurfer
-              </div>
+              
             </div>
             
             {/* Columna de campos de texto - Ambas secciones apiladas */}
@@ -1281,13 +1324,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               {/* Controles de reproducción de video */}
               <button 
                 onClick={() => {
-                  if (videoRef.current && audioRef.current) {
+                  if (videoRef.current && audioRef.current && wavesurferRef.current) {
                     if (videoRef.current.paused) {
                       videoRef.current.play();
                       audioRef.current.play();
+                      // Iniciar reproducción en WaveSurfer
+                      wavesurferRef.current.play();
                     } else {
                       videoRef.current.pause();
                       audioRef.current.pause();
+                      // Pausar reproducción en WaveSurfer
+                      wavesurferRef.current.pause();
                     }
                   }
                 }}
@@ -1314,10 +1361,16 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               {/* Control de retroceder 10 segundos */}
               <button 
                 onClick={() => {
-                  if (videoRef.current && audioRef.current) {
+                  if (videoRef.current && audioRef.current && wavesurferRef.current) {
                     const newTime = Math.max(0, videoRef.current.currentTime - 10);
                     videoRef.current.currentTime = newTime;
                     audioRef.current.currentTime = newTime;
+                    
+                    // Sincronizar WaveSurfer
+                    if (videoRef.current.duration) {
+                      const progress = newTime / videoRef.current.duration;
+                      wavesurferRef.current.seekTo(progress);
+                    }
                   }
                 }}
                 title="Retroceder 10s"
@@ -1343,10 +1396,16 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               {/* Control de adelantar 10 segundos */}
               <button 
                 onClick={() => {
-                  if (videoRef.current && audioRef.current) {
+                  if (videoRef.current && audioRef.current && wavesurferRef.current) {
                     const newTime = Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + 10);
                     videoRef.current.currentTime = newTime;
                     audioRef.current.currentTime = newTime;
+                    
+                    // Sincronizar WaveSurfer
+                    if (videoRef.current.duration) {
+                      const progress = newTime / videoRef.current.duration;
+                      wavesurferRef.current.seekTo(progress);
+                    }
                   }
                 }}
                 title="Adelantar 10s"
