@@ -12,6 +12,7 @@ import { apiService } from './services/api.js';
 
 function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData }) {
   const videoRef = useRef(null);
+  const audioRef = useRef(null);
   const wavesurferRef = useRef(null);
   const [audioUrl, setAudioUrl] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
@@ -190,31 +191,42 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   }, [projectData]);
 
-  // Cargar video del proyecto cuando esté disponible
+  // Cargar video y audio del proyecto cuando esté disponible
   useEffect(() => {
-    if (projectData && projectData.video) {
-      console.log("🎬 Cargando video del proyecto:", projectData.video);
+    if (projectData) {
+      console.log("🎬 Cargando proyecto:", projectData);
       
-      // Procesar URL según el servicio detectado
+      // Procesar URL del video
       let processedVideoUrl = projectData.video;
-      let processedAudioUrl = projectData.video;
+      let processedAudioUrl = null;
+
+      // Priorizar audiofinal si está disponible, sino usar el audio del video
+      if (projectData.audiofinal) {
+        console.log("🎵 Usando audiofinal del proyecto:", projectData.audiofinal);
+        processedAudioUrl = projectData.audiofinal;
+      } else if (projectData.audio) {
+        console.log("🎵 Usando audio del proyecto:", projectData.audio);
+        processedAudioUrl = projectData.audio;
+      } else if (projectData.video) {
+        console.log("🎵 Generando audio desde el video:", projectData.video);
+        if (isCloudinaryUrl(projectData.video)) {
+          processedAudioUrl = generateAudioUrl(projectData.video);
+        } else {
+          processedAudioUrl = projectData.video;
+        }
+      }
 
       if (isCloudinaryUrl(projectData.video)) {
         console.log("☁️ Detectada URL de Cloudinary, procesando...");
         processedVideoUrl = processCloudinaryUrl(projectData.video);
-        processedAudioUrl = generateAudioUrl(projectData.video);
         console.log("✅ URLs procesadas para Cloudinary:", { video: processedVideoUrl, audio: processedAudioUrl });
-        
-        setVideoUrl(processedVideoUrl);
-        setAudioUrl(processedAudioUrl);
-        setWaveLoading(true);
       } else {
-        // URL directa o de otro servicio
         console.log("🔗 URL directa detectada:", projectData.video);
-        setVideoUrl(processedVideoUrl);
-        setAudioUrl(processedAudioUrl);
-        setWaveLoading(true);
       }
+      
+      setVideoUrl(processedVideoUrl);
+      setAudioUrl(processedAudioUrl);
+      setWaveLoading(true);
     }
   }, [projectData]);
 
@@ -411,9 +423,10 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     };
   }, [audioUrl, projectData]);
 
-  // Sincronizar video con WaveSurfer cuando el video se reproduce
+  // Sincronizar video con WaveSurfer y audio cuando el video se reproduce
   useEffect(() => {
     const video = videoRef.current;
+    const audio = audioRef.current;
     if (!video || !wavesurferRef.current) return;
 
     const handleTimeUpdate = () => {
@@ -427,9 +440,37 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       }
     };
 
+    const handlePlay = () => {
+      if (audio && projectData?.audiofinal) {
+        audio.currentTime = video.currentTime;
+        audio.play();
+      }
+    };
+
+    const handlePause = () => {
+      if (audio && projectData?.audiofinal) {
+        audio.pause();
+      }
+    };
+
+    const handleSeeked = () => {
+      if (audio && projectData?.audiofinal) {
+        audio.currentTime = video.currentTime;
+      }
+    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
-    return () => video.removeEventListener('timeupdate', handleTimeUpdate);
-  }, [isUserSeeking, segments]);
+    video.addEventListener('play', handlePlay);
+    video.addEventListener('pause', handlePause);
+    video.addEventListener('seeked', handleSeeked);
+    
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('play', handlePlay);
+      video.removeEventListener('pause', handlePause);
+      video.removeEventListener('seeked', handleSeeked);
+    };
+  }, [isUserSeeking, segments, projectData?.audiofinal]);
 
   // Actualizar colores de regiones cuando cambia el segmento actual
   useEffect(() => {
@@ -482,6 +523,39 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   }, [zoomLevel]);
 
+  // Sincronizar audio con video cuando se hace seek manual
+  useEffect(() => {
+    const video = videoRef.current;
+    const audio = audioRef.current;
+    
+    if (!video || !audio || !projectData?.audiofinal) return;
+
+    const handleSeeking = () => {
+      if (!isUserSeeking) {
+        audio.currentTime = video.currentTime;
+      }
+    };
+
+    video.addEventListener('seeking', handleSeeking);
+    return () => video.removeEventListener('seeking', handleSeeking);
+  }, [projectData?.audiofinal, isUserSeeking]);
+
+  // Estado para forzar re-renderizado del tiempo
+  const [currentTime, setCurrentTime] = useState(0);
+  
+  // Actualizar tiempo cada segundo para mostrar en la UI
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const updateTime = () => {
+      setCurrentTime(video.currentTime);
+    };
+
+    const interval = setInterval(updateTime, 100);
+    return () => clearInterval(interval);
+  }, []);
+
   // Verificar que los contenedores del DOM estén disponibles
   useEffect(() => {
     console.log("Componente montado, verificando contenedores...");
@@ -505,6 +579,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       // Convertir de milisegundos a segundos para el video
       const startInSeconds = start / 1000;
       videoRef.current.currentTime = startInSeconds;
+      
+      // Sincronizar audio si está disponible
+      if (audioRef.current && projectData?.audiofinal) {
+        audioRef.current.currentTime = startInSeconds;
+      }
+      
       videoRef.current.play();
       
       if (videoRef.current.duration) {
@@ -676,7 +756,9 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             {projectData && (
               <div style={{ color: '#64748b', fontSize: '0.9rem' }}>
                 <p style={{ margin: '0.5rem 0' }}>📡 Descargando video...</p>
-                <p style={{ margin: '0.5rem 0' }}>🎵 Generando onda de audio...</p>
+                <p style={{ margin: '0.5rem 0' }}>
+                  🎵 {projectData.audiofinal ? 'Usando audio final del proyecto' : 'Generando onda de audio desde video'}...
+                </p>
                 <p style={{ margin: '0.5rem 0' }}>🎯 Configurando {segments.length} segmentos...</p>
               </div>
             )}
@@ -787,14 +869,43 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             marginBottom: '1em',
             alignItems: 'flex-start'
           }}>
-            {/* Columna del video */}
+            {/* Columna del video (ahora solo audio) */}
             <div style={{ flex: '1', maxWidth: '900px' }}>
+              {/* Elemento de audio para reproducir el audiofinal */}
+              {projectData?.audiofinal && (
+                <audio
+                  ref={audioRef}
+                  src={projectData.audiofinal}
+                  style={{ display: 'none' }}
+                />
+              )}
+              {/* Video sin controles, solo imagen */}
               <video
                 ref={videoRef}
                 src={videoUrl}
-                className="vsp-video"
-                controls
+                style={{ 
+                  width: '100%', 
+                  maxWidth: '900px',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+                }}
+                muted={true}
+                controls={false}
               />
+              
+              {/* Indicador de controles personalizados */}
+              <div style={{
+                marginTop: '0.5rem',
+                padding: '0.5rem',
+                background: 'rgba(59, 130, 246, 0.05)',
+                borderRadius: '4px',
+                fontSize: '0.85rem',
+                color: '#1e40af',
+                textAlign: 'center',
+                border: '1px solid rgba(59, 130, 246, 0.2)'
+              }}>
+                🎮 Controles del video en la barra de controles del WaveSurfer
+              </div>
             </div>
             
             {/* Columna de campos de texto - Ambas secciones apiladas */}
@@ -1116,12 +1227,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             {/* Sidebar de controles */}
             <div style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
+              gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr',
               gap: '0.5em',
               padding: '0.5em',
               background: '#374151',
               borderRadius: '8px',
-              minWidth: '80px'
+              minWidth: '200px'
             }}>
               {/* Controles de zoom */}
               <button
@@ -1165,6 +1276,97 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 onMouseOut={e => e.currentTarget.style.background = 'transparent'}
               >
                 <span style={{ fontSize: '18px', fontWeight: 'bold' }}>+</span>
+              </button>
+              
+              {/* Controles de reproducción de video */}
+              <button 
+                onClick={() => {
+                  if (videoRef.current && audioRef.current) {
+                    if (videoRef.current.paused) {
+                      videoRef.current.play();
+                      audioRef.current.play();
+                    } else {
+                      videoRef.current.pause();
+                      audioRef.current.pause();
+                    }
+                  }
+                }}
+                title="Play/Pause"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>▶</span>
+              </button>
+              
+              {/* Control de retroceder 10 segundos */}
+              <button 
+                onClick={() => {
+                  if (videoRef.current && audioRef.current) {
+                    const newTime = Math.max(0, videoRef.current.currentTime - 10);
+                    videoRef.current.currentTime = newTime;
+                    audioRef.current.currentTime = newTime;
+                  }
+                }}
+                title="Retroceder 10s"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>⏪</span>
+              </button>
+              
+              {/* Control de adelantar 10 segundos */}
+              <button 
+                onClick={() => {
+                  if (videoRef.current && audioRef.current) {
+                    const newTime = Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + 10);
+                    videoRef.current.currentTime = newTime;
+                    audioRef.current.currentTime = newTime;
+                  }
+                }}
+                title="Adelantar 10s"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: 40,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  color: '#fff',
+                  transition: 'background 0.2s'
+                }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>⏩</span>
               </button>
               
               {/* Controles de navegación */}
@@ -1213,8 +1415,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 }}
                 onMouseOver={e => {
                   if (currentSegmentIdx < segments.length - 1) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  }
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
                 }}
                 onMouseOut={e => e.currentTarget.style.background = 'transparent'}
               >
@@ -1224,6 +1425,24 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             
             {/* Contenedor del waveform */}
             <div className="vsp-waveform-container" style={{ flex: 1 }}>
+              {/* Indicador de tiempo del video */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: '1rem',
+                marginBottom: '0.5rem',
+                padding: '0.5rem',
+                background: 'rgba(55, 65, 81, 0.1)',
+                borderRadius: '4px',
+                fontSize: '0.9rem',
+                color: '#374151'
+              }}>
+                <span>⏱️ Tiempo: {currentTime ? `${Math.floor(currentTime / 60)}:${(currentTime % 60).toFixed(1).padStart(4, '0')}` : '0:00.0'}</span>
+                {videoRef.current?.duration && (
+                  <span>/ {Math.floor(videoRef.current.duration / 60)}:${(videoRef.current.duration % 60).toFixed(1).padStart(4, '0')}</span>
+                )}
+              </div>
               <div id="waveform" className="vsp-waveform" />
               <div id="timeline" className="vsp-timeline" />
             </div>
