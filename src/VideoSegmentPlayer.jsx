@@ -1153,33 +1153,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
 
 
-      {/* Información de la actividad seleccionada */}
-      <div style={{
-        background: 'rgba(59,130,246,0.1)',
-        padding: '1rem',
-        borderRadius: '8px',
-        border: '1px solid rgba(59,130,246,0.2)',
-        marginBottom: '1rem',
-        textAlign: 'center'
-      }}>
-        <h3 style={{
-          margin: '0 0 0.5rem 0',
-          color: '#1e40af',
-          fontSize: '1.1rem'
-        }}>
-          🎯 Actividad Seleccionada: {selectedActivity || 'actividad1'}
-        </h3>
-        <p style={{
-          margin: '0',
-          color: '#374151',
-          fontSize: '0.9rem'
-        }}>
-          {selectedActivity === 'actividad1' ? 'Análisis de emociones y prosodia' :
-           selectedActivity === 'actividad2' ? 'Recuerdo activado por el contenido' :
-           selectedActivity === 'actividad3' ? 'Descripción del segmento de video' :
-           'Análisis de emociones y prosodia (por defecto)'}
-        </p>
-      </div>
+
 
       {/* Input de archivo JSON al inicio (solo si no hay proyecto cargado) */}
       {!projectData && !jsonFile && !videoUrl && (
