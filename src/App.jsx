@@ -6,6 +6,7 @@ import ProjectDetail from "./components/ProjectDetail";
 import { useAuth } from "./contexts/AuthContext.jsx";
 import { API_CONFIG } from "./config.js";
 import { apiService } from "./services/api.js";
+import './App.css';
 
 function App() {
   const { isAuthenticated, user, loading: authLoading, logout } = useAuth();
@@ -15,6 +16,7 @@ function App() {
   const [error, setError] = useState('');
   const [currentView, setCurrentView] = useState('player'); // 'projects', 'detail', 'player'
   const [selectedProject, setSelectedProject] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState('actividad1'); // Estado para la actividad seleccionada
 
   // Verificar autenticación al cargar la aplicación
   useEffect(() => {
@@ -195,8 +197,95 @@ function App() {
               alignItems: 'center',
               boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
             }}>
-              <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <h1 style={{ margin: '0', fontSize: '1.5rem' }}>🎬 Taller</h1>
+                
+                {/* Menú hamburguesa */}
+                <div style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setSelectedActivity(prev => prev === 'menu-open' ? 'actividad1' : 'menu-open')}
+                    style={{
+                      background: 'rgba(255,255,255,0.2)',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      color: 'white',
+                      padding: '0.4rem 0.8rem',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      transition: 'background 0.3s',
+                      fontSize: '0.9rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+                    onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.2)'}
+                  >
+                    <span>☰</span>
+                    Actividades
+                  </button>
+                  
+                  {/* Dropdown del menú */}
+                  {selectedActivity === 'menu-open' && (
+                    <div style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '0',
+                      background: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      zIndex: 1000,
+                      minWidth: '200px',
+                      marginTop: '0.5rem'
+                    }}>
+                      <div
+                        onClick={() => setSelectedActivity('actividad1')}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
+                          background: selectedActivity === 'actividad1' ? '#fef3c7' : 'transparent',
+                          color: selectedActivity === 'actividad1' ? '#92400e' : '#374151',
+                          fontWeight: selectedActivity === 'actividad1' ? '600' : '400'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad1' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad1' ? '#fef3c7' : 'transparent'}
+                      >
+                        📝 Actividad 1
+                      </div>
+                      <div
+                        onClick={() => setSelectedActivity('actividad2')}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
+                          background: selectedActivity === 'actividad2' ? '#fef3c7' : 'transparent',
+                          color: selectedActivity === 'actividad2' ? '#92400e' : '#374151',
+                          fontWeight: selectedActivity === 'actividad2' ? '600' : '400'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad2' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad2' ? '#fef3c7' : 'transparent'}
+                      >
+                        📋 Actividad 2
+                      </div>
+                      <div
+                        onClick={() => setSelectedActivity('actividad3')}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          background: selectedActivity === 'actividad3' ? '#fef3c7' : 'transparent',
+                          color: selectedActivity === 'actividad3' ? '#92400e' : '#374151',
+                          fontWeight: selectedActivity === 'actividad3' ? '600' : '400'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad3' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad3' ? '#fef3c7' : 'transparent'}
+                      >
+                        📊 Actividad 3
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
                 {projectData && (
                   <p style={{ margin: '0.25rem 0 0 0', opacity: '0.9', fontSize: '0.85rem' }}>
                     {segments.length} segmentos disponibles
@@ -260,6 +349,7 @@ function App() {
               segments={segments}
               projectData={projectData}
               hideUpload={true} // Ocultar la subida de archivos ya que usamos la API
+              selectedActivity={selectedActivity} // Pasar la actividad seleccionada
             />
           </div>
         );

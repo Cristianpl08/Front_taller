@@ -10,7 +10,7 @@ import ArrowRightIcon from '@mui/icons-material/ArrowRight';
 import { useAuth } from './contexts/AuthContext.jsx';
 import { apiService } from './services/api.js';
 
-function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData }) {
+function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData, selectedActivity = 'actividad1' }) {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
   const wavesurferRef = useRef(null);
@@ -40,9 +40,62 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [editableDescription, setEditableDescription] = useState('');
   const [editableProsody1, setEditableProsody1] = useState('');
   const [editableProsody2, setEditableProsody2] = useState('');
+  const [editableProsody3, setEditableProsody3] = useState(''); // Nuevo campo para prosody 3
   
   // Estado para mostrar feedback de guardado
   const [saveStatus, setSaveStatus] = useState({});
+
+  // Emociones basadas en la rueda de emociones
+  const emotions = [
+    // Joy (Alegría)
+    { value: 'SERENIDAD', label: 'SERENIDAD (Serenidad)', category: 'Joy' },
+    { value: 'JOY', label: 'JOY (Alegría)', category: 'Joy' },
+    { value: 'ECSTASY', label: 'ECSTASY (Éxtasis)', category: 'Joy' },
+    
+    // Trust (Confianza)
+    { value: 'ACEPTACION', label: 'ACEPTACIÓN (Aceptación)', category: 'Trust' },
+    { value: 'TRUST', label: 'TRUST (Confianza)', category: 'Trust' },
+    { value: 'LOVE', label: 'LOVE (Amor)', category: 'Trust' },
+    
+    // Fear (Miedo)
+    { value: 'APRENSION', label: 'APRENSIÓN (Aprensión)', category: 'Fear' },
+    { value: 'FEAR', label: 'FEAR (Miedo)', category: 'Fear' },
+    { value: 'TERROR', label: 'TERROR (Terror)', category: 'Fear' },
+    
+    // Surprise (Sorpresa)
+    { value: 'DISTRACCION', label: 'DISTRACCIÓN (Distracción)', category: 'Surprise' },
+    { value: 'SURPRISE', label: 'SURPRISE (Sorpresa)', category: 'Surprise' },
+    { value: 'ASOMBRO', label: 'ASOMBRO (Asombro)', category: 'Surprise' },
+    
+    // Sadness (Tristeza)
+    { value: 'PENSATIVO', label: 'PENSATIVO (Pensativo)', category: 'Sadness' },
+    { value: 'SADNESS', label: 'SADNESS (Tristeza)', category: 'Sadness' },
+    { value: 'GRIEF', label: 'GRIEF (Pena)', category: 'Sadness' },
+    
+    // Disgust (Disgusto)
+    { value: 'ABURRIMIENTO', label: 'ABURRIMIENTO (Aburrimiento)', category: 'Disgust' },
+    { value: 'DISGUST', label: 'DISGUST (Disgusto)', category: 'Disgust' },
+    { value: 'ASCO', label: 'ASCO (Asco)', category: 'Disgust' },
+    
+    // Anger (Enfado)
+    { value: 'MOLESTIA', label: 'MOLESTIA (Molestia)', category: 'Anger' },
+    { value: 'ANGER', label: 'ANGER (Enfado)', category: 'Anger' },
+    { value: 'RAGE', label: 'RAGE (Ira)', category: 'Anger' },
+    
+    // Anticipation (Anticipación)
+    { value: 'INTERES', label: 'INTERÉS (Interés)', category: 'Anticipation' },
+    { value: 'ANTICIPATION', label: 'ANTICIPATION (Anticipación)', category: 'Anticipation' },
+    { value: 'VIGILANCIA', label: 'VIGILANCIA (Vigilancia)', category: 'Anticipation' },
+    
+    // Combinaciones
+    { value: 'OPTIMISMO', label: 'OPTIMISMO (Optimismo)', category: 'Combination' },
+    { value: 'SUBMISION', label: 'SUBMISIÓN (Sumisión)', category: 'Combination' },
+    { value: 'AWE', label: 'AWE (Temor)', category: 'Combination' },
+    { value: 'DESAPROBACION', label: 'DESAPROBACIÓN (Desaprobación)', category: 'Combination' },
+    { value: 'REMORDIMIENTO', label: 'REMORDIMIENTO (Remordimiento)', category: 'Combination' },
+    { value: 'CONTEMPT', label: 'CONTEMPT (Desprecio)', category: 'Combination' },
+    { value: 'AGRESIVIDAD', label: 'AGRESIVIDAD (Agresividad)', category: 'Combination' }
+  ];
 
   // Función para validar el archivo JSON
   const validateJsonFile = (file) => {
@@ -108,7 +161,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!user || !segment) {
       console.log('❌ No hay usuario o segmento');
-      return { description: '', prosody1: '', prosody2: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '' };
     }
     
     // Primero intentar obtener datos del localStorage (más actualizados)
@@ -131,7 +184,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!fullSegment || !fullSegment.descriptions_prosody) {
       console.log('❌ No hay segmento completo o descriptions_prosody');
-      return { description: '', prosody1: '', prosody2: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '' };
     }
     
     const userEntry = fullSegment.descriptions_prosody.find(entry => entry.user_id === user._id);
@@ -139,13 +192,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!userEntry) {
       console.log('❌ No se encontró entrada para el usuario actual');
-      return { description: '', prosody1: '', prosody2: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '' };
     }
     
     const result = {
       description: userEntry.description || '',
       prosody1: userEntry['prosody 1'] || '',
-      prosody2: userEntry['prosody 2'] || ''
+      prosody2: userEntry['prosody 2'] || '',
+      prosody3: userEntry['prosody 3'] || ''
     };
     
     console.log('✅ getUserDescriptionProsody - Resultado:', result);
@@ -183,11 +237,13 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableDescription(userData.description);
       setEditableProsody1(userData.prosody1);
       setEditableProsody2(userData.prosody2);
+      setEditableProsody3(userData.prosody3);
     } else {
       // Limpiar campos si no hay segmento seleccionado
       setEditableDescription('');
       setEditableProsody1('');
       setEditableProsody2('');
+      setEditableProsody3('');
     }
   }, [currentSegmentIdx, segments, user]);
 
@@ -798,123 +854,247 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
   // Handler genérico para guardar campo editable
   const handleFieldBlur = async (fieldName, fieldValue) => {
-    if (currentSegmentIdx === -1 || !user || !segments[currentSegmentIdx]) return;
-    // Usar siempre el _id real de MongoDB
+    console.log('='.repeat(80));
+    console.log('🚀 INICIO DE handleFieldBlur');
+    console.log('='.repeat(80));
+    
+    // 1. PARÁMETROS RECIBIDOS
+    console.log('📥 PARÁMETROS RECIBIDOS:');
+    console.log('   fieldName:', fieldName);
+    console.log('   fieldValue:', fieldValue);
+    console.log('   Tipo de fieldName:', typeof fieldName);
+    console.log('   Tipo de fieldValue:', typeof fieldValue);
+    
+    // 2. VERIFICACIÓN DE ESTADO
+    console.log('🔍 VERIFICACIÓN DE ESTADO:');
+    console.log('   currentSegmentIdx:', currentSegmentIdx);
+    console.log('   user:', user);
+    console.log('   user._id:', user?._id);
+    console.log('   segments:', segments);
+    console.log('   segments[currentSegmentIdx]:', segments[currentSegmentIdx]);
+    
+    if (currentSegmentIdx === -1 || !user || !segments[currentSegmentIdx]) {
+      console.log('❌ VALIDACIÓN FALLIDA:');
+      console.log('   currentSegmentIdx === -1:', currentSegmentIdx === -1);
+      console.log('   !user:', !user);
+      console.log('   !segments[currentSegmentIdx]:', !segments[currentSegmentIdx]);
+      console.log('❌ No se puede guardar: segmento no seleccionado o usuario no autenticado');
+      return;
+    }
+    
+    // 3. EXTRACCIÓN DE DATOS
     const segmentId = segments[currentSegmentIdx]._id;
     const userId = user._id;
     const timestamp = new Date().toISOString();
     
-    // Mostrar estado de guardando
+    console.log('🔑 DATOS EXTRAÍDOS:');
+    console.log('   segmentId:', segmentId);
+    console.log('   userId:', userId);
+    console.log('   timestamp:', timestamp);
+    
+    // 4. ESTADO DE GUARDADO
+    console.log('💾 ACTUALIZANDO ESTADO DE GUARDADO...');
     setSaveStatus(prev => ({ ...prev, [fieldName]: 'saving' }));
+    console.log('   Estado de guardado actualizado a "saving"');
     
     try {
-      // Actualizar localmente primero para feedback inmediato
+      // 5. ACTUALIZACIÓN LOCAL
+      console.log('🏠 INICIANDO ACTUALIZACIÓN LOCAL...');
+      
       if (projectData && projectData._id) {
-        // Buscar el proyecto en localStorage y actualizarlo
+        console.log('📊 projectData disponible:', {
+          id: projectData._id,
+          name: projectData.name,
+          segments: projectData.segments?.length || 0
+        });
+        
+        // Buscar el proyecto en localStorage
         const storedProject = localStorage.getItem('currentProject');
+        console.log('🔍 localStorage.getItem("currentProject"):', storedProject ? 'ENCONTRADO' : 'NO ENCONTRADO');
+        
         if (storedProject) {
           const project = JSON.parse(storedProject);
-          const updatedProject = {
-            ...project,
-            segments: project.segments.map(segment => {
-              if (segment._id !== segmentId) return segment;
+          console.log('📦 PROYECTO EN localStorage:');
+          console.log('   ID:', project._id);
+          console.log('   Nombre:', project.name);
+          console.log('   Segmentos:', project.segments?.length || 0);
+          
+          // Buscar el segmento específico
+          const targetSegment = project.segments?.find(s => s._id === segmentId);
+          console.log('🎯 SEGMENTO OBJETIVO EN localStorage:');
+          console.log('   Encontrado:', !!targetSegment);
+          console.log('   Segmento:', targetSegment);
+          
+          if (targetSegment) {
+            console.log('📝 DESCRIPTIONS_PROSODY ACTUAL:');
+            console.log('   Original:', targetSegment.descriptions_prosody);
+            console.log('   Tipo:', typeof targetSegment.descriptions_prosody);
+            console.log('   Es array:', Array.isArray(targetSegment.descriptions_prosody));
+            
+            const existingDescriptionsProsody = targetSegment.descriptions_prosody || [];
+            const existingUserIndex = existingDescriptionsProsody.findIndex(
+              entry => entry.user_id === userId
+            );
+            
+            console.log('👤 BÚSQUEDA DE USUARIO EXISTENTE:');
+            console.log('   existingUserIndex:', existingUserIndex);
+            console.log('   existingDescriptionsProsody:', existingDescriptionsProsody);
+            
+            let updatedDescriptionsProsody;
+            if (existingUserIndex >= 0) {
+              console.log('✏️ ACTUALIZANDO ENTRADA EXISTENTE...');
+              updatedDescriptionsProsody = [...existingDescriptionsProsody];
+              const oldEntry = updatedDescriptionsProsody[existingUserIndex];
+              console.log('   Entrada anterior:', oldEntry);
               
-              // Crear o actualizar descriptions_prosody
-              const existingDescriptionsProsody = segment.descriptions_prosody || [];
-              const existingUserIndex = existingDescriptionsProsody.findIndex(
-                entry => entry.user_id === userId
-              );
-              
-              let updatedDescriptionsProsody;
-              if (existingUserIndex >= 0) {
-                // Actualizar entrada existente del usuario
-                updatedDescriptionsProsody = [...existingDescriptionsProsody];
-                updatedDescriptionsProsody[existingUserIndex] = {
-                  ...updatedDescriptionsProsody[existingUserIndex],
-                  [fieldName]: fieldValue,
-                  timestamp: timestamp
-                };
-              } else {
-                // Crear nueva entrada para el usuario
-                updatedDescriptionsProsody = [
-                  ...existingDescriptionsProsody,
-                  {
-                    user_id: userId,
-                    [fieldName]: fieldValue,
-                    timestamp: timestamp
-                  }
-                ];
-              }
-              
-              return {
-                ...segment,
-                descriptions_prosody: updatedDescriptionsProsody
+              updatedDescriptionsProsody[existingUserIndex] = {
+                ...oldEntry,
+                [fieldName]: fieldValue,
+                timestamp: timestamp
               };
-            })
-          };
-          
-          // Guardar en localStorage
-          localStorage.setItem('currentProject', JSON.stringify(updatedProject));
-          
-          // Actualizar también los segmentos en localStorage
-          const updatedSegments = updatedProject.segments.map((segment, index) => ({
-            id: index + 1,
-            start: segment.start_time * 1000,
-            end: segment.end_time * 1000,
-            duration: segment.duration || (segment.end_time - segment.start_time),
-            description: segment.description || '',
-            prosody: segment.prosody || '',
-            prosody2: segment.prosody2 || '',
-            views: segment.views || 0,
-            likes: segment.likes || 0,
-            _id: segment._id,
-            projectid: segment.project_id,
-            descriptions_prosody: segment.descriptions_prosody || []
-          }));
-          
-          localStorage.setItem('currentSegments', JSON.stringify(updatedSegments));
-          
-          // Forzar re-renderizado actualizando el estado local
-          setSegments(updatedSegments);
-          
-          // Mostrar estado de guardado local
-          setSaveStatus(prev => ({ ...prev, [fieldName]: 'saved-local' }));
+              
+              console.log('   Entrada actualizada:', updatedDescriptionsProsody[existingUserIndex]);
+            } else {
+              console.log('🆕 CREANDO NUEVA ENTRADA...');
+              const newEntry = {
+                user_id: userId,
+                [fieldName]: fieldValue,
+                timestamp: timestamp
+              };
+              console.log('   Nueva entrada:', newEntry);
+              
+              updatedDescriptionsProsody = [
+                ...existingDescriptionsProsody,
+                newEntry
+              ];
+            }
+            
+            console.log('💾 DESCRIPTIONS_PROSODY FINAL:');
+            console.log('   Array completo:', updatedDescriptionsProsody);
+            console.log('   Cantidad de entradas:', updatedDescriptionsProsody.length);
+            
+            // Actualizar el proyecto
+            const updatedProject = {
+              ...project,
+              segments: project.segments.map(segment => {
+                if (segment._id !== segmentId) return segment;
+                
+                return {
+                  ...segment,
+                  descriptions_prosody: updatedDescriptionsProsody
+                };
+              })
+            };
+            
+            // Guardar en localStorage
+            console.log('💾 GUARDANDO EN localStorage...');
+            localStorage.setItem('currentProject', JSON.stringify(updatedProject));
+            console.log('   ✅ currentProject guardado');
+            
+            // Actualizar segmentos en localStorage
+            const updatedSegments = updatedProject.segments.map((segment, index) => ({
+              id: index + 1,
+              start: segment.start_time * 1000,
+              end: segment.end_time * 1000,
+              duration: segment.duration || (segment.end_time - segment.start_time),
+              description: segment.description || '',
+              prosody: segment.prosody || '',
+              prosody2: segment.prosody2 || '',
+              prosody3: segment.prosody3 || '',
+              views: segment.views || 0,
+              likes: segment.likes || 0,
+              _id: segment._id,
+              projectid: segment.project_id,
+              descriptions_prosody: segment.descriptions_prosody || []
+            }));
+            
+            localStorage.setItem('currentSegments', JSON.stringify(updatedSegments));
+            console.log('   ✅ currentSegments guardado');
+            
+            // Actualizar estado local
+            setSegments(updatedSegments);
+            console.log('   ✅ Estado local actualizado');
+            
+            // Actualizar estado de guardado
+            setSaveStatus(prev => ({ ...prev, [fieldName]: 'saved-local' }));
+            console.log('   ✅ Estado de guardado: "saved-local"');
+            
+          } else {
+            console.log('⚠️ SEGMENTO NO ENCONTRADO EN localStorage');
+          }
+        } else {
+          console.log('⚠️ PROYECTO NO ENCONTRADO EN localStorage');
         }
+      } else {
+        console.log('⚠️ projectData NO DISPONIBLE:', {
+          projectData: !!projectData,
+          projectDataId: projectData?._id
+        });
       }
       
-      // Enviar a la base de datos
-      await apiService.postDescriptionProsody({
+      // 6. ENVÍO A BASE DE DATOS
+      console.log('🌐 ENVIANDO A BASE DE DATOS...');
+      console.log('📤 PARÁMETROS PARA API:');
+      console.log('   segmentId:', segmentId);
+      console.log('   userId:', userId);
+      console.log('   fieldName:', fieldName);
+      console.log('   fieldValue:', fieldValue);
+      console.log('   timestamp:', timestamp);
+      
+      const apiParams = {
         segmentId,
         userId,
         fieldName,
         fieldValue,
         timestamp
-      });
+      };
+      console.log('📦 OBJETO COMPLETO:', apiParams);
       
-      // Mostrar estado de guardado completo
+      await apiService.postDescriptionProsody(apiParams);
+      console.log('✅ API RESPONDIDA EXITOSAMENTE');
+      
+      // 7. ESTADO FINAL
       setSaveStatus(prev => ({ ...prev, [fieldName]: 'saved' }));
+      console.log('💾 ESTADO FINAL: "saved"');
       
-      // Limpiar el estado después de 2 segundos
+      // 8. LIMPIEZA
       setTimeout(() => {
         setSaveStatus(prev => {
           const newStatus = { ...prev };
           delete newStatus[fieldName];
           return newStatus;
         });
+        console.log('🧹 ESTADO LIMPIADO');
       }, 2000);
       
-      console.log(`✅ Campo ${fieldName} guardado localmente y en la base de datos.`);
-    } catch (err) {
-      console.error(`❌ Error guardando ${fieldName}:`, err);
-      setSaveStatus(prev => ({ ...prev, [fieldName]: 'error' }));
+      console.log('='.repeat(80));
+      console.log('🎉 handleFieldBlur COMPLETADO EXITOSAMENTE');
+      console.log('='.repeat(80));
       
-      // Limpiar el estado de error después de 3 segundos
+    } catch (err) {
+      console.error('='.repeat(80));
+      console.error('💥 ERROR EN handleFieldBlur');
+      console.error('='.repeat(80));
+      console.error('❌ Error completo:', err);
+      console.error('📋 Stack trace:', err.stack);
+      console.error('🔍 Contexto del error:');
+      console.error('   fieldName:', fieldName);
+      console.error('   fieldValue:', fieldValue);
+      console.error('   segmentId:', segmentId);
+      console.error('   userId:', userId);
+      console.error('   timestamp:', timestamp);
+      
+      setSaveStatus(prev => ({ ...prev, [fieldName]: 'error' }));
+      console.error('💾 Estado de guardado: "error"');
+      
+      // Limpiar estado de error
       setTimeout(() => {
         setSaveStatus(prev => {
           const newStatus = { ...prev };
           delete newStatus[fieldName];
           return newStatus;
         });
+        console.error('🧹 Estado de error limpiado');
       }, 3000);
     }
   };
@@ -1080,7 +1260,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               
             </div>
             
-            {/* Columna de campos de texto - Ambas secciones apiladas */}
+            {/* Columna de campos de texto - Cambia según la actividad seleccionada */}
             <div className="vsp-fields-container" style={{ 
               flex: '1',
               display: 'flex', 
@@ -1090,302 +1270,392 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               maxWidth: '900px',
               margin: '0 auto'
             }}>
-              {/* Sección Original */}
-              <div style={{
-                opacity: currentSegmentIdx === -1 ? 0.5 : 1,
-                pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
-                transition: 'opacity 0.3s ease'
-              }}>
-                
-                                 <div style={{ 
-                   background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                   padding: '0.75em', 
-                   borderRadius: '8px',
-                   border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
-                 }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5em', 
-                    fontWeight: 'bold',
-                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
-                  }}>
-                    Descripción Original:
-                  </label>
-                  <textarea
-                    value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.description || '' : ''}
-                    readOnly
-                    disabled={currentSegmentIdx === -1}
-                    style={{
-                      width: '100%',
-                      minHeight: '40px',
-                      maxHeight: '60px',
-                      padding: '0.4em',
-                      border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                      borderRadius: '4px',
-                      resize: 'vertical',
-                      fontFamily: 'inherit',
-                      fontSize: '14px',
-                      background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                      cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
-                      boxSizing: 'border-box'
-                    }}
-                    placeholder="Sin descripción disponible"
-                  />
-                </div>
-                
-                <div style={{ 
-                  display: 'flex',
-                  gap: '1em',
-                  marginTop: '0.75em'
-                }}>
-                  <div style={{ 
-                    flex: '1',
-                    background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                    padding: '0.75em', 
-                    borderRadius: '8px',
-                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
-                  }}>
-                    <label style={{ 
-                      display: 'block', 
-                      marginBottom: '0.5em', 
-                      fontWeight: 'bold',
-                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+              {/* Renderizar contenido según la actividad seleccionada */}
+              {selectedActivity === 'actividad1' && (
+                <>
+                  {/* Pregunta de la Actividad 1 - Solo visible cuando hay segmento activo */}
+                  {currentSegmentIdx >= 0 && (
+                    <div style={{
+                      background: 'rgba(59,130,246,0.1)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(59,130,246,0.2)',
+                      marginBottom: '1rem'
                     }}>
-                      Prosody 1 Original:
-                    </label>
-                    <input
-                      type="text"
-                      value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody || '' : ''}
-                      readOnly
-                      disabled={currentSegmentIdx === -1}
-                      style={{
-                        width: '100%',
-                        padding: '0.4em',
-                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                        borderRadius: '4px',
-                        fontFamily: 'inherit',
-                        fontSize: '14px',
-                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
-                        boxSizing: 'border-box'
-                      }}
-                      placeholder="Sin emoción principal"
-                    />
-                  </div>
-                  
-                  <div style={{ 
-                    flex: '1',
-                    background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                    padding: '0.75em', 
-                    borderRadius: '8px',
-                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
-                  }}>
-                    <label style={{ 
-                      display: 'block', 
-                      marginBottom: '0.5em', 
-                      fontWeight: 'bold',
-                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
-                    }}>
-                      Prosody 2 Original:
-                    </label>
-                    <input
-                      type="text"
-                      value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.prosody2 || '' : ''}
-                      readOnly
-                      disabled={currentSegmentIdx === -1}
-                      style={{
-                        width: '100%',
-                        padding: '0.4em',
-                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                        borderRadius: '4px',
-                        fontFamily: 'inherit',
-                        fontSize: '14px',
-                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
-                        boxSizing: 'border-box'
-                      }}
-                      placeholder="Sin emoción secundaria"
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Sección Nueva (Editable) */}
-              <div style={{
-                opacity: currentSegmentIdx === -1 ? 0.5 : 1,
-                pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
-                transition: 'opacity 0.3s ease'
-              }}>
-                <div className="vsp-field-editable-block" style={{ 
-                  background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
-                  padding: '0.75em', 
-                  borderRadius: '8px',
-                  border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
-                  marginBottom: '0.75em',
-                  position: 'relative'
-                }}>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5em', 
-                    fontWeight: 'bold',
-                    color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
-                  }}>
-                    Descripción:
-                    {saveStatus['description'] && (
-                      <span style={{
-                        marginLeft: '0.5em',
-                        fontSize: '0.8em',
-                        fontWeight: 'normal',
-                        color: saveStatus['description'] === 'saving' ? '#f59e0b' :
-                               saveStatus['description'] === 'saved-local' ? '#10b981' :
-                               saveStatus['description'] === 'saved' ? '#059669' :
-                               saveStatus['description'] === 'error' ? '#ef4444' : '#6b7280'
+                      <h3 style={{
+                        margin: '0 0 0.5rem 0',
+                        color: '#1e40af',
+                        fontSize: '1.1rem'
                       }}>
-                        {saveStatus['description'] === 'saving' ? '⏳ Guardando...' :
-                         saveStatus['description'] === 'saved-local' ? '💾 Guardado localmente' :
-                         saveStatus['description'] === 'saved' ? '✅ Guardado' :
-                         saveStatus['description'] === 'error' ? '❌ Error' : ''}
-                      </span>
-                    )}
-                  </label>
-                  <textarea
-                    value={editableDescription}
-                    onChange={(e) => setEditableDescription(e.target.value)}
-                    onBlur={(e) => handleFieldBlur('description', e.target.value)}
-                    placeholder="Escribe aquí la nueva descripción..."
-                    disabled={currentSegmentIdx === -1}
-                    style={{
-                      width: '100%',
-                      minHeight: '40px',
-                      maxHeight: '60px',
-                      padding: '0.4em',
-                      border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                      borderRadius: '4px',
-                      resize: 'vertical',
-                      fontFamily: 'inherit',
-                      fontSize: '14px',
-                      background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                      cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                </div>
-                
-                <div className="vsp-fields-prosody-row" style={{ 
-                  display: 'flex',
-                  gap: '0.75em'
-                }}>
-                  <div className="vsp-field-editable-block" style={{ 
-                    flex: '1',
-                    background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
-                    padding: '0.75em', 
-                    borderRadius: '8px',
-                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
+                        📝 Actividad 1
+                      </h3>
+                      <p style={{
+                        margin: '0',
+                        color: '#374151',
+                        fontSize: '1rem',
+                        lineHeight: '1.5'
+                      }}>
+                        ¿Qué emociones sentiste al ver y escuchar la audiodescripción del segmento de video?
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Solo los 3 campos de prosody */}
+                  <div style={{
+                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                    transition: 'opacity 0.3s ease'
                   }}>
-                    <label style={{ 
-                      display: 'block', 
-                      marginBottom: '0.5em', 
-                      fontWeight: 'bold',
-                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                    <div className="vsp-fields-prosody-row" style={{ 
+                      display: 'flex',
+                      gap: '0.75em',
+                      flexWrap: 'wrap'
                     }}>
-                      Prosody 1:
-                      {saveStatus['prosody 1'] && (
-                        <span style={{
-                          marginLeft: '0.5em',
-                          fontSize: '0.8em',
-                          fontWeight: 'normal',
-                          color: saveStatus['prosody 1'] === 'saving' ? '#f59e0b' :
-                                 saveStatus['prosody 1'] === 'saved-local' ? '#10b981' :
-                                 saveStatus['prosody 1'] === 'saved' ? '#059669' :
-                                 saveStatus['prosody 1'] === 'error' ? '#ef4444' : '#6b7280'
+                      <div className="vsp-field-editable-block" style={{ 
+                        flex: '1',
+                        minWidth: '200px',
+                        background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                        padding: '0.75em', 
+                        borderRadius: '8px',
+                        border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
+                      }}>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '0.5em', 
+                          fontWeight: 'bold',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                         }}>
-                          {saveStatus['prosody 1'] === 'saving' ? '⏳ Guardando...' :
-                           saveStatus['prosody 1'] === 'saved-local' ? '💾 Guardado localmente' :
-                           saveStatus['prosody 1'] === 'saved' ? '✅ Guardado' :
-                           saveStatus['prosody 1'] === 'error' ? '❌ Error' : ''}
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="text"
-                      value={editableProsody1}
-                      onChange={(e) => setEditableProsody1(e.target.value)}
-                      onBlur={(e) => handleFieldBlur('prosody 1', e.target.value)}
-                      placeholder="Escribe aquí la emoción principal..."
-                      disabled={currentSegmentIdx === -1}
-                      style={{
-                        width: '100%',
-                        padding: '0.4em',
-                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                        borderRadius: '4px',
-                        fontFamily: 'inherit',
-                        fontSize: '14px',
-                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
-                        boxSizing: 'border-box'
-                      }}
-                    />
+                          Prosody 1:
+                          {saveStatus['prosody 1'] && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.8em',
+                              fontWeight: 'normal',
+                              color: saveStatus['prosody 1'] === 'saving' ? '#f59e0b' :
+                                     saveStatus['prosody 1'] === 'saved-local' ? '#10b981' :
+                                     saveStatus['prosody 1'] === 'saved' ? '#059669' :
+                                     saveStatus['prosody 1'] === 'error' ? '#ef4444' : '#6b7280'
+                            }}>
+                              {saveStatus['prosody 1'] === 'saving' ? '⏳ Guardando...' :
+                               saveStatus['prosody 1'] === 'saved-local' ? '💾 Guardado localmente' :
+                               saveStatus['prosody 1'] === 'saved' ? '✅ Guardado' :
+                               saveStatus['prosody 1'] === 'error' ? '❌ Error' : ''}
+                            </span>
+                          )}
+                        </label>
+                        <select
+                          value={editableProsody1}
+                          onChange={(e) => setEditableProsody1(e.target.value)}
+                          onBlur={(e) => handleFieldBlur('prosody 1', e.target.value)}
+                          disabled={currentSegmentIdx === -1}
+                          style={{
+                            width: '100%',
+                            padding: '0.4em',
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <option value="">Selecciona una emoción...</option>
+                          {emotions.map((emotion, index) => (
+                            <option key={index} value={emotion.value}>
+                              {emotion.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="vsp-field-editable-block" style={{ 
+                        flex: '1',
+                        minWidth: '200px',
+                        background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                        padding: '0.75em', 
+                        borderRadius: '8px',
+                        border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
+                      }}>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '0.5em', 
+                          fontWeight: 'bold',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                        }}>
+                          Prosody 2:
+                          {saveStatus['prosody 2'] && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.8em',
+                              fontWeight: 'normal',
+                              color: saveStatus['prosody 2'] === 'saving' ? '#f59e0b' :
+                                     saveStatus['prosody 2'] === 'saved-local' ? '#10b981' :
+                                     saveStatus['prosody 2'] === 'saved' ? '#059669' :
+                                     saveStatus['prosody 2'] === 'error' ? '#ef4444' : '#6b7280'
+                            }}>
+                              {saveStatus['prosody 2'] === 'saving' ? '⏳ Guardando...' :
+                               saveStatus['prosody 2'] === 'saved-local' ? '💾 Guardado localmente' :
+                               saveStatus['prosody 2'] === 'saved' ? '✅ Guardado' :
+                               saveStatus['prosody 2'] === 'error' ? '❌ Error' : ''}
+                            </span>
+                          )}
+                        </label>
+                        <select
+                          value={editableProsody2}
+                          onChange={(e) => setEditableProsody2(e.target.value)}
+                          onBlur={(e) => handleFieldBlur('prosody 2', e.target.value)}
+                          disabled={currentSegmentIdx === -1}
+                          style={{
+                            width: '100%',
+                            padding: '0.4em',
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <option value="">Selecciona una emoción...</option>
+                          {emotions.map((emotion, index) => (
+                            <option key={index} value={emotion.value}>
+                              {emotion.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <div className="vsp-field-editable-block" style={{ 
+                        flex: '1',
+                        minWidth: '200px',
+                        background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                        padding: '0.75em', 
+                        borderRadius: '8px',
+                        border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
+                      }}>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '0.5em', 
+                          fontWeight: 'bold',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                        }}>
+                          Prosody 3:
+                          {saveStatus['prosody 3'] && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.8em',
+                              fontWeight: 'normal',
+                              color: saveStatus['prosody 3'] === 'saving' ? '#f59e0b' :
+                                     saveStatus['prosody 3'] === 'saved-local' ? '#10b981' :
+                                     saveStatus['prosody 3'] === 'saved' ? '#059669' :
+                                     saveStatus['prosody 3'] === 'error' ? '#ef4444' : '#6b7280'
+                            }}>
+                              {saveStatus['prosody 3'] === 'saving' ? '⏳ Guardando...' :
+                               saveStatus['prosody 3'] === 'saved-local' ? '💾 Guardado localmente' :
+                               saveStatus['prosody 3'] === 'saved' ? '✅ Guardado' :
+                               saveStatus['prosody 3'] === 'error' ? '❌ Error' : ''}
+                            </span>
+                          )}
+                        </label>
+                        <select
+                          value={editableProsody3}
+                          onChange={(e) => setEditableProsody3(e.target.value)}
+                          onBlur={(e) => handleFieldBlur('prosody 3', e.target.value)}
+                          disabled={currentSegmentIdx === -1}
+                          style={{
+                            width: '100%',
+                            padding: '0.4em',
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
+                            boxSizing: 'border-box'
+                          }}
+                        >
+                          <option value="">Selecciona una emoción...</option>
+                          {emotions.map((emotion, index) => (
+                            <option key={index} value={emotion.value}>
+                              {emotion.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              {/* Actividad 2 - Vacía por ahora */}
+              {selectedActivity === 'actividad2' && (
+                <div style={{
+                  background: 'rgba(156,163,175,0.1)',
+                  padding: '2rem',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(156,163,175,0.2)',
+                  textAlign: 'center'
+                }}>
+                  <h3 style={{
+                    margin: '0 0 1rem 0',
+                    color: '#6b7280',
+                    fontSize: '1.2rem'
+                  }}>
+                    📋 Actividad 2
+                  </h3>
+                  <p style={{
+                    margin: '0',
+                    color: '#9ca3af',
+                    fontSize: '1rem'
+                  }}>
+                    Esta actividad estará disponible próximamente.
+                  </p>
+                </div>
+              )}
+              
+              {/* Actividad 3 - Descripción original y editable */}
+              {selectedActivity === 'actividad3' && (
+                <>
+                  {/* Pregunta de la Actividad 3 - Solo visible cuando hay segmento activo */}
+                  {currentSegmentIdx >= 0 && (
+                    <div style={{
+                      background: 'rgba(156,163,175,0.1)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(156,163,175,0.2)',
+                      marginBottom: '1rem'
+                    }}>
+                      <h3 style={{
+                        margin: '0 0 0.5rem 0',
+                        color: '#6b7280',
+                        fontSize: '1.1rem'
+                      }}>
+                        📊 Actividad 3
+                      </h3>
+                      <p style={{
+                        margin: '0',
+                        color: '#374151',
+                        fontSize: '1rem',
+                        lineHeight: '1.5'
+                      }}>
+                        ¿Cómo describirías este segmento de video?
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Sección Original */}
+                  <div style={{
+                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                    transition: 'opacity 0.3s ease'
+                  }}>
+                    <div style={{ 
+                      background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
+                      padding: '0.75em', 
+                      borderRadius: '8px',
+                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
+                    }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '0.5em', 
+                        fontWeight: 'bold',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                      }}>
+                        Descripción Original:
+                      </label>
+                      <textarea
+                        value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.description || '' : ''}
+                        readOnly
+                        disabled={currentSegmentIdx === -1}
+                        style={{
+                          width: '100%',
+                          minHeight: '40px',
+                          maxHeight: '60px',
+                          padding: '0.4em',
+                          border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                          borderRadius: '4px',
+                          resize: 'vertical',
+                          fontFamily: 'inherit',
+                          fontSize: '14px',
+                          background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                          cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
+                          boxSizing: 'border-box'
+                        }}
+                        placeholder="Sin descripción disponible"
+                      />
+                    </div>
                   </div>
                   
-                  <div className="vsp-field-editable-block" style={{ 
-                    flex: '1',
-                    background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
-                    padding: '0.75em', 
-                    borderRadius: '8px',
-                    border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
+                  {/* Sección Nueva (Editable) */}
+                  <div style={{
+                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                    transition: 'opacity 0.3s ease'
                   }}>
-                    <label style={{ 
-                      display: 'block', 
-                      marginBottom: '0.5em', 
-                      fontWeight: 'bold',
-                      color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                    <div className="vsp-field-editable-block" style={{ 
+                      background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                      padding: '0.75em', 
+                      borderRadius: '8px',
+                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
+                      marginBottom: '0.75em',
+                      position: 'relative'
                     }}>
-                      Prosody 2:
-                      {saveStatus['prosody 2'] && (
-                        <span style={{
-                          marginLeft: '0.5em',
-                          fontSize: '0.8em',
-                          fontWeight: 'normal',
-                          color: saveStatus['prosody 2'] === 'saving' ? '#f59e0b' :
-                                 saveStatus['prosody 2'] === 'saved-local' ? '#10b981' :
-                                 saveStatus['prosody 2'] === 'saved' ? '#059669' :
-                                 saveStatus['prosody 2'] === 'error' ? '#ef4444' : '#6b7280'
-                        }}>
-                          {saveStatus['prosody 2'] === 'saving' ? '⏳ Guardando...' :
-                           saveStatus['prosody 2'] === 'saved-local' ? '💾 Guardado localmente' :
-                           saveStatus['prosody 2'] === 'saved' ? '✅ Guardado' :
-                           saveStatus['prosody 2'] === 'error' ? '❌ Error' : ''}
-                        </span>
-                      )}
-                    </label>
-                    <input
-                      type="text"
-                      value={editableProsody2}
-                      onChange={(e) => setEditableProsody2(e.target.value)}
-                      onBlur={(e) => handleFieldBlur('prosody 2', e.target.value)}
-                      placeholder="Escribe aquí la emoción secundaria..."
-                      disabled={currentSegmentIdx === -1}
-                      style={{
-                        width: '100%',
-                        padding: '0.4em',
-                        border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                        borderRadius: '4px',
-                        fontFamily: 'inherit',
-                        fontSize: '14px',
-                        background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                        cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
-                        boxSizing: 'border-box'
-                      }}
-                    />
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '0.5em', 
+                        fontWeight: 'bold',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                      }}>
+                        Descripción:
+                        {saveStatus['description'] && (
+                          <span style={{
+                            marginLeft: '0.5em',
+                            fontSize: '0.8em',
+                            fontWeight: 'normal',
+                            color: saveStatus['description'] === 'saving' ? '#f59e0b' :
+                                   saveStatus['description'] === 'saved-local' ? '#10b981' :
+                                   saveStatus['description'] === 'saved' ? '#059669' :
+                                   saveStatus['description'] === 'error' ? '#ef4444' : '#6b7280'
+                          }}>
+                            {saveStatus['description'] === 'saving' ? '⏳ Guardando...' :
+                             saveStatus['description'] === 'saved-local' ? '💾 Guardado localmente' :
+                             saveStatus['description'] === 'saved' ? '✅ Guardado' :
+                             saveStatus['description'] === 'error' ? '❌ Error' : ''}
+                          </span>
+                        )}
+                      </label>
+                      <textarea
+                        value={editableDescription}
+                        onChange={(e) => setEditableDescription(e.target.value)}
+                        onBlur={(e) => handleFieldBlur('description', e.target.value)}
+                        placeholder="Escribe aquí la nueva descripción..."
+                        disabled={currentSegmentIdx === -1}
+                        style={{
+                          width: '100%',
+                          minHeight: '40px',
+                          maxHeight: '60px',
+                          padding: '0.4em',
+                          border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                          borderRadius: '4px',
+                          resize: 'vertical',
+                          fontFamily: 'inherit',
+                          fontSize: '14px',
+                          background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                          cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </div>
           
