@@ -46,56 +46,56 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   // Estado para mostrar feedback de guardado
   const [saveStatus, setSaveStatus] = useState({});
 
-  // Emociones basadas en la rueda de emociones
+  // Emociones basadas en la rueda de emociones con colores
   const emotions = [
-    // Joy (Alegría)
-    { value: 'SERENIDAD', label: 'SERENIDAD (Serenidad)', category: 'Joy' },
-    { value: 'JOY', label: 'JOY (Alegría)', category: 'Joy' },
-    { value: 'ECSTASY', label: 'ECSTASY (Éxtasis)', category: 'Joy' },
+    // Alegría - Amarillo
+    { value: 'SERENIDAD', label: 'SERENIDAD', category: 'Alegría', color: '#FFD700' },
+    { value: 'ALEGRIA', label: 'ALEGRÍA', category: 'Alegría', color: '#FFD700' },
+    { value: 'EXTASIS', label: 'ÉXTASIS', category: 'Alegría', color: '#FFD700' },
     
-    // Trust (Confianza)
-    { value: 'ACEPTACION', label: 'ACEPTACIÓN (Aceptación)', category: 'Trust' },
-    { value: 'TRUST', label: 'TRUST (Confianza)', category: 'Trust' },
-    { value: 'LOVE', label: 'LOVE (Amor)', category: 'Trust' },
+    // Confianza - Verde claro
+    { value: 'ACEPTACION', label: 'ACEPTACIÓN', category: 'Confianza', color: '#90EE90' },
+    { value: 'CONFIANZA', label: 'CONFIANZA', category: 'Confianza', color: '#90EE90' },
+    { value: 'AMOR', label: 'AMOR', category: 'Confianza', color: '#90EE90' },
     
-    // Fear (Miedo)
-    { value: 'APRENSION', label: 'APRENSIÓN (Aprensión)', category: 'Fear' },
-    { value: 'FEAR', label: 'FEAR (Miedo)', category: 'Fear' },
-    { value: 'TERROR', label: 'TERROR (Terror)', category: 'Fear' },
+    // Miedo - Verde
+    { value: 'APRENSION', label: 'APRENSIÓN', category: 'Miedo', color: '#228B22' },
+    { value: 'MIEDO', label: 'MIEDO', category: 'Miedo', color: '#228B22' },
+    { value: 'TERROR', label: 'TERROR', category: 'Miedo', color: '#228B22' },
     
-    // Surprise (Sorpresa)
-    { value: 'DISTRACCION', label: 'DISTRACCIÓN (Distracción)', category: 'Surprise' },
-    { value: 'SURPRISE', label: 'SURPRISE (Sorpresa)', category: 'Surprise' },
-    { value: 'ASOMBRO', label: 'ASOMBRO (Asombro)', category: 'Surprise' },
+    // Sorpresa - Turquesa
+    { value: 'DISTRACCION', label: 'DISTRACCIÓN', category: 'Sorpresa', color: '#40E0D0' },
+    { value: 'SORPRESA', label: 'SORPRESA', category: 'Sorpresa', color: '#40E0D0' },
+    { value: 'ASOMBRO', label: 'ASOMBRO', category: 'Sorpresa', color: '#40E0D0' },
     
-    // Sadness (Tristeza)
-    { value: 'PENSATIVO', label: 'PENSATIVO (Pensativo)', category: 'Sadness' },
-    { value: 'SADNESS', label: 'SADNESS (Tristeza)', category: 'Sadness' },
-    { value: 'GRIEF', label: 'GRIEF (Pena)', category: 'Sadness' },
+    // Tristeza - Azul
+    { value: 'PENSATIVO', label: 'PENSATIVO', category: 'Tristeza', color: '#4169E1' },
+    { value: 'TRISTEZA', label: 'TRISTEZA', category: 'Tristeza', color: '#4169E1' },
+    { value: 'PENA', label: 'PENA', category: 'Tristeza', color: '#4169E1' },
     
-    // Disgust (Disgusto)
-    { value: 'ABURRIMIENTO', label: 'ABURRIMIENTO (Aburrimiento)', category: 'Disgust' },
-    { value: 'DISGUST', label: 'DISGUST (Disgusto)', category: 'Disgust' },
-    { value: 'ASCO', label: 'ASCO (Asco)', category: 'Disgust' },
+    // Disgusto - Púrpura
+    { value: 'ABURRIMIENTO', label: 'ABURRIMIENTO', category: 'Disgusto', color: '#8A2BE2' },
+    { value: 'DISGUSTO', label: 'DISGUSTO', category: 'Disgusto', color: '#8A2BE2' },
+    { value: 'ASCO', label: 'ASCO', category: 'Disgusto', color: '#8A2BE2' },
     
-    // Anger (Enfado)
-    { value: 'MOLESTIA', label: 'MOLESTIA (Molestia)', category: 'Anger' },
-    { value: 'ANGER', label: 'ANGER (Enfado)', category: 'Anger' },
-    { value: 'RAGE', label: 'RAGE (Ira)', category: 'Anger' },
+    // Enfado - Magenta
+    { value: 'MOLESTIA', label: 'MOLESTIA', category: 'Enfado', color: '#FF00FF' },
+    { value: 'ENFADO', label: 'ENFADO', category: 'Enfado', color: '#FF00FF' },
+    { value: 'IRA', label: 'IRA', category: 'Enfado', color: '#FF00FF' },
     
-    // Anticipation (Anticipación)
-    { value: 'INTERES', label: 'INTERÉS (Interés)', category: 'Anticipation' },
-    { value: 'ANTICIPATION', label: 'ANTICIPATION (Anticipación)', category: 'Anticipation' },
-    { value: 'VIGILANCIA', label: 'VIGILANCIA (Vigilancia)', category: 'Anticipation' },
+    // Anticipación - Naranja
+    { value: 'INTERES', label: 'INTERÉS', category: 'Anticipación', color: '#FFA500' },
+    { value: 'ANTICIPACION', label: 'ANTICIPACIÓN', category: 'Anticipación', color: '#FFA500' },
+    { value: 'VIGILANCIA', label: 'VIGILANCIA', category: 'Anticipación', color: '#FFA500' },
     
-    // Combinaciones
-    { value: 'OPTIMISMO', label: 'OPTIMISMO (Optimismo)', category: 'Combination' },
-    { value: 'SUBMISION', label: 'SUBMISIÓN (Sumisión)', category: 'Combination' },
-    { value: 'AWE', label: 'AWE (Temor)', category: 'Combination' },
-    { value: 'DESAPROBACION', label: 'DESAPROBACIÓN (Desaprobación)', category: 'Combination' },
-    { value: 'REMORDIMIENTO', label: 'REMORDIMIENTO (Remordimiento)', category: 'Combination' },
-    { value: 'CONTEMPT', label: 'CONTEMPT (Desprecio)', category: 'Combination' },
-    { value: 'AGRESIVIDAD', label: 'AGRESIVIDAD (Agresividad)', category: 'Combination' }
+    // Combinaciones - Colores mixtos
+    { value: 'OPTIMISMO', label: 'OPTIMISMO', category: 'Combinaciones', color: '#FFB347' },
+    { value: 'SUMISION', label: 'SUBMISIÓN', category: 'Combinaciones', color: '#98FB98' },
+    { value: 'TEMOR', label: 'TEMOR', category: 'Combinaciones', color: '#20B2AA' },
+    { value: 'DESAPROBACION', label: 'DESAPROBACIÓN', category: 'Combinaciones', color: '#9370DB' },
+    { value: 'REMORDIMIENTO', label: 'REMORDIMIENTO', category: 'Combinaciones', color: '#6495ED' },
+    { value: 'DESPRECIO', label: 'DESPRECIO', category: 'Combinaciones', color: '#DDA0DD' },
+    { value: 'AGRESIVIDAD', label: 'AGRESIVIDAD', category: 'Combinaciones', color: '#FF6347' }
   ];
 
   // Función para validar el archivo JSON
@@ -558,6 +558,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     video.addEventListener('seeking', handleSeeking);
     return () => video.removeEventListener('seeking', handleSeeking);
   }, [projectData?.audiofinal, isUserSeeking]);
+
+  // Función para obtener el color de una emoción
+  const getEmotionColor = (emotionValue) => {
+    const emotion = emotions.find(e => e.value === emotionValue);
+    return emotion ? emotion.color : '#000000';
+  };
 
   // Función para formatear tiempo en formato MM:SS.S
   const formatTime = (timeInSeconds) => {
@@ -1337,6 +1343,67 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       }}>
                         ¿Qué emociones sentiste al ver y escuchar la audiodescripción del segmento de video?
                       </p>
+                      
+                      {/* Leyenda de colores de emociones */}
+                      <div style={{
+                        marginTop: '1rem',
+                        padding: '0.75rem',
+                        background: 'rgba(255,255,255,0.8)',
+                        borderRadius: '6px',
+                        border: '1px solid rgba(59,130,246,0.2)'
+                      }}>
+                        <p style={{
+                          margin: '0 0 0.5rem 0',
+                          fontSize: '0.85rem',
+                          fontWeight: 'bold',
+                          color: '#374151'
+                        }}>
+                          🎨 Leyenda de colores por categoría:
+                        </p>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+                          gap: '0.5rem',
+                          fontSize: '0.8rem'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#FFD700', fontWeight: 'bold' }}>●</span>
+                            <span>Alegría</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#90EE90', fontWeight: 'bold' }}>●</span>
+                            <span>Confianza</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#228B22', fontWeight: 'bold' }}>●</span>
+                            <span>Miedo</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#40E0D0', fontWeight: 'bold' }}>●</span>
+                            <span>Sorpresa</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#4169E1', fontWeight: 'bold' }}>●</span>
+                            <span>Tristeza</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#8A2BE2', fontWeight: 'bold' }}>●</span>
+                            <span>Disgusto</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#FF00FF', fontWeight: 'bold' }}>●</span>
+                            <span>Enfado</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#FFA500', fontWeight: 'bold' }}>●</span>
+                            <span>Anticipación</span>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <span style={{ color: '#FFB347', fontWeight: 'bold' }}>●</span>
+                            <span>Combinaciones</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
                   
@@ -1366,6 +1433,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                         }}>
                           Prosody 1:
+                          {editableProsody1 && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.9em',
+                              fontWeight: 'bold',
+                              color: getEmotionColor(editableProsody1),
+                              textShadow: '0 0 2px rgba(0,0,0,0.3)'
+                            }}>
+                              ● {editableProsody1}
+                            </span>
+                          )}
                           {saveStatus['prosody 1'] && (
                             <span style={{
                               marginLeft: '0.5em',
@@ -1391,19 +1469,28 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           style={{
                             width: '100%',
                             padding: '0.4em',
-                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody1 ? getEmotionColor(editableProsody1) : '#cbd5e1'}`,
                             borderRadius: '4px',
                             fontFamily: 'inherit',
                             fontSize: '14px',
-                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody1 ? `${getEmotionColor(editableProsody1)}15` : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody1 ? getEmotionColor(editableProsody1) : '#000',
                             cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
-                            boxSizing: 'border-box'
+                            boxSizing: 'border-box',
+                            transition: 'all 0.3s ease'
                           }}
                         >
                           <option value="">Selecciona una emoción...</option>
                           {emotions.map((emotion, index) => (
-                            <option key={index} value={emotion.value}>
+                            <option 
+                              key={index} 
+                              value={emotion.value}
+                              style={{ 
+                                color: emotion.color, 
+                                fontWeight: 'bold',
+                                backgroundColor: '#ffffff'
+                              }}
+                            >
                               {emotion.label}
                             </option>
                           ))}
@@ -1425,6 +1512,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                         }}>
                           Prosody 2:
+                          {editableProsody2 && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.9em',
+                              fontWeight: 'bold',
+                              color: getEmotionColor(editableProsody2),
+                              textShadow: '0 0 2px rgba(0,0,0,0.3)'
+                            }}>
+                              ● {editableProsody2}
+                            </span>
+                          )}
                           {saveStatus['prosody 2'] && (
                             <span style={{
                               marginLeft: '0.5em',
@@ -1450,19 +1548,28 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           style={{
                             width: '100%',
                             padding: '0.4em',
-                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody2 ? getEmotionColor(editableProsody2) : '#cbd5e1'}`,
                             borderRadius: '4px',
                             fontFamily: 'inherit',
                             fontSize: '14px',
-                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody2 ? `${getEmotionColor(editableProsody2)}15` : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody2 ? getEmotionColor(editableProsody2) : '#000',
                             cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
-                            boxSizing: 'border-box'
+                            boxSizing: 'border-box',
+                            transition: 'all 0.3s ease'
                           }}
                         >
                           <option value="">Selecciona una emoción...</option>
                           {emotions.map((emotion, index) => (
-                            <option key={index} value={emotion.value}>
+                            <option 
+                              key={index} 
+                              value={emotion.value}
+                              style={{ 
+                                color: emotion.color, 
+                                fontWeight: 'bold',
+                                backgroundColor: '#ffffff'
+                              }}
+                            >
                               {emotion.label}
                             </option>
                           ))}
@@ -1484,6 +1591,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                         }}>
                           Prosody 3:
+                          {editableProsody3 && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.9em',
+                              fontWeight: 'bold',
+                              color: getEmotionColor(editableProsody3),
+                              textShadow: '0 0 2px rgba(0,0,0,0.3)'
+                            }}>
+                              ● {editableProsody3}
+                            </span>
+                          )}
                           {saveStatus['prosody 3'] && (
                             <span style={{
                               marginLeft: '0.5em',
@@ -1509,19 +1627,28 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           style={{
                             width: '100%',
                             padding: '0.4em',
-                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody3 ? getEmotionColor(editableProsody3) : '#cbd5e1'}`,
                             borderRadius: '4px',
                             fontFamily: 'inherit',
                             fontSize: '14px',
-                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody3 ? `${getEmotionColor(editableProsody3)}15` : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody3 ? getEmotionColor(editableProsody3) : '#000',
                             cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
-                            boxSizing: 'border-box'
+                            boxSizing: 'border-box',
+                            transition: 'all 0.3s ease'
                           }}
                         >
                           <option value="">Selecciona una emoción...</option>
                           {emotions.map((emotion, index) => (
-                            <option key={index} value={emotion.value}>
+                            <option 
+                              key={index} 
+                              value={emotion.value}
+                              style={{ 
+                                color: emotion.color, 
+                                fontWeight: 'bold',
+                                backgroundColor: '#ffffff'
+                              }}
+                            >
                               {emotion.label}
                             </option>
                           ))}
