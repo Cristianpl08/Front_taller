@@ -215,6 +215,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   }, [propSegments]);
 
+  // Asegurar que siempre haya una actividad seleccionada por defecto
+  useEffect(() => {
+    if (!selectedActivity || selectedActivity === '') {
+      // Si no hay actividad seleccionada, se usará el valor por defecto 'actividad1'
+      console.log('🎯 Usando actividad por defecto: actividad1');
+    }
+  }, [selectedActivity]);
+
   // Cargar datos del localStorage al inicio si están disponibles
   useEffect(() => {
     const storedSegments = localStorage.getItem('currentSegments');
@@ -1139,6 +1147,34 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
 
 
+      {/* Información de la actividad seleccionada */}
+      <div style={{
+        background: 'rgba(59,130,246,0.1)',
+        padding: '1rem',
+        borderRadius: '8px',
+        border: '1px solid rgba(59,130,246,0.2)',
+        marginBottom: '1rem',
+        textAlign: 'center'
+      }}>
+        <h3 style={{
+          margin: '0 0 0.5rem 0',
+          color: '#1e40af',
+          fontSize: '1.1rem'
+        }}>
+          🎯 Actividad Seleccionada: {selectedActivity || 'actividad1'}
+        </h3>
+        <p style={{
+          margin: '0',
+          color: '#374151',
+          fontSize: '0.9rem'
+        }}>
+          {selectedActivity === 'actividad1' ? 'Análisis de emociones y prosodia' :
+           selectedActivity === 'actividad2' ? 'Recuerdo activado por el contenido' :
+           selectedActivity === 'actividad3' ? 'Descripción del segmento de video' :
+           'Análisis de emociones y prosodia (por defecto)'}
+        </p>
+      </div>
+
       {/* Input de archivo JSON al inicio (solo si no hay proyecto cargado) */}
       {!projectData && !jsonFile && !videoUrl && (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1em', margin: '2em 0' }}>
@@ -1275,7 +1311,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               margin: '0 auto'
             }}>
               {/* Renderizar contenido según la actividad seleccionada */}
-              {selectedActivity === 'actividad1' && (
+              {(selectedActivity === 'actividad1' || !selectedActivity) && (
                 <>
                   {/* Pregunta de la Actividad 1 - Solo visible cuando hay segmento activo */}
                   {currentSegmentIdx >= 0 && (
@@ -1497,7 +1533,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               )}
               
               {/* Actividad 2 - Campo de texto para recuerdo activado */}
-              {selectedActivity === 'actividad2' && (
+              {selectedActivity === 'actividad2' && selectedActivity !== 'actividad1' && (
                 <div style={{
                   background: 'rgba(156,163,175,0.1)',
                   padding: '2rem',
@@ -1609,7 +1645,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               )}
               
               {/* Actividad 3 - Descripción original y editable */}
-              {selectedActivity === 'actividad3' && (
+              {selectedActivity === 'actividad3' && selectedActivity !== 'actividad1' && (
                 <>
                   {/* Pregunta de la Actividad 3 - Solo visible cuando hay segmento activo */}
                   {currentSegmentIdx >= 0 && (
