@@ -41,6 +41,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [editableProsody1, setEditableProsody1] = useState('');
   const [editableProsody2, setEditableProsody2] = useState('');
   const [editableProsody3, setEditableProsody3] = useState(''); // Nuevo campo para prosody 3
+  const [editableMemory, setEditableMemory] = useState(''); // Nuevo campo para el recuerdo activado
   
   // Estado para mostrar feedback de guardado
   const [saveStatus, setSaveStatus] = useState({});
@@ -161,7 +162,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!user || !segment) {
       console.log('❌ No hay usuario o segmento');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
     }
     
     // Primero intentar obtener datos del localStorage (más actualizados)
@@ -184,7 +185,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!fullSegment || !fullSegment.descriptions_prosody) {
       console.log('❌ No hay segmento completo o descriptions_prosody');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
     }
     
     const userEntry = fullSegment.descriptions_prosody.find(entry => entry.user_id === user._id);
@@ -192,14 +193,15 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!userEntry) {
       console.log('❌ No se encontró entrada para el usuario actual');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
     }
     
     const result = {
       description: userEntry.description || '',
       prosody1: userEntry['prosody 1'] || '',
       prosody2: userEntry['prosody 2'] || '',
-      prosody3: userEntry['prosody 3'] || ''
+      prosody3: userEntry['prosody 3'] || '',
+      memory: userEntry.memory || ''
     };
     
     console.log('✅ getUserDescriptionProsody - Resultado:', result);
@@ -238,12 +240,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableProsody1(userData.prosody1);
       setEditableProsody2(userData.prosody2);
       setEditableProsody3(userData.prosody3);
+      setEditableMemory(userData.memory);
     } else {
       // Limpiar campos si no hay segmento seleccionado
       setEditableDescription('');
       setEditableProsody1('');
       setEditableProsody2('');
       setEditableProsody3('');
+      setEditableMemory('');
     }
   }, [currentSegmentIdx, segments, user]);
 
@@ -1492,14 +1496,13 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 </>
               )}
               
-              {/* Actividad 2 - Vacía por ahora */}
+              {/* Actividad 2 - Campo de texto para recuerdo activado */}
               {selectedActivity === 'actividad2' && (
                 <div style={{
                   background: 'rgba(156,163,175,0.1)',
                   padding: '2rem',
                   borderRadius: '8px',
-                  border: '1px solid rgba(156,163,175,0.2)',
-                  textAlign: 'center'
+                  border: '1px solid rgba(156,163,175,0.2)'
                 }}>
                   <h3 style={{
                     margin: '0 0 1rem 0',
@@ -1508,13 +1511,100 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   }}>
                     📋 Actividad 2
                   </h3>
-                  <p style={{
-                    margin: '0',
-                    color: '#9ca3af',
-                    fontSize: '1rem'
-                  }}>
-                    Esta actividad estará disponible próximamente.
-                  </p>
+                  
+                  {/* Pregunta de la Actividad 2 - Solo visible cuando hay segmento activo */}
+                  {currentSegmentIdx >= 0 && (
+                    <div style={{
+                      background: 'rgba(255,255,255,0.8)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(156,163,175,0.2)',
+                      marginBottom: '1rem'
+                    }}>
+                      <p style={{
+                        margin: '0 0 0.5rem 0',
+                        color: '#374151',
+                        fontSize: '1rem',
+                        lineHeight: '1.5',
+                        fontWeight: '500'
+                      }}>
+                        ¿Qué recuerdo se activó en ti a partir de este contenido?
+                      </p>
+                      
+                      {/* Campo de texto editable */}
+                      <div style={{
+                        opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                        pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                        transition: 'opacity 0.3s ease'
+                      }}>
+                        <textarea
+                          value={editableMemory}
+                          onChange={(e) => setEditableMemory(e.target.value)}
+                          onBlur={() => handleFieldBlur('memory', editableMemory)}
+                          placeholder="Escribe aquí tu recuerdo..."
+                          disabled={currentSegmentIdx === -1}
+                          style={{
+                            width: '100%',
+                            minHeight: '80px',
+                            padding: '0.75rem',
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            borderRadius: '6px',
+                            resize: 'vertical',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#374151',
+                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
+                            boxSizing: 'border-box',
+                            lineHeight: '1.5'
+                          }}
+                        />
+                        
+                        {/* Indicador de estado de guardado */}
+                        {saveStatus['memory'] && (
+                          <div style={{
+                            marginTop: '0.5rem',
+                            fontSize: '0.875rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem'
+                          }}>
+                            {saveStatus['memory'] === 'saving' && (
+                              <span style={{ color: '#f59e0b' }}>
+                                💾 Guardando...
+                              </span>
+                            )}
+                            {saveStatus['memory'] === 'saved' && (
+                              <span style={{ color: '#10b981' }}>
+                                ✅ Guardado
+                              </span>
+                            )}
+                            {saveStatus['memory'] === 'error' && (
+                              <span style={{ color: '#ef4444' }}>
+                                ❌ Error al guardar
+                              </span>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Mensaje cuando no hay segmento seleccionado */}
+                  {currentSegmentIdx === -1 && (
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '2rem'
+                    }}>
+                      <p style={{
+                        margin: '0',
+                        color: '#9ca3af',
+                        fontSize: '1rem'
+                      }}>
+                        Selecciona un segmento de video para comenzar la actividad.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
               
