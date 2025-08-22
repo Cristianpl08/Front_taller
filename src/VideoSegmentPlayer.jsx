@@ -1341,40 +1341,40 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           fontSize: '0.8rem'
                         }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#FFD700', fontWeight: 'bold' }}>●</span>
-                            <span>Alegría</span>
+                            <span style={{ color: '#facc15', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#b45309', fontWeight: 'bold' }}>Alegría</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#90EE90', fontWeight: 'bold' }}>●</span>
-                            <span>Confianza</span>
+                            <span style={{ color: '#16a34a', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#166534', fontWeight: 'bold' }}>Confianza</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#228B22', fontWeight: 'bold' }}>●</span>
-                            <span>Miedo</span>
+                            <span style={{ color: '#1e40af', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#1e3a8a', fontWeight: 'bold' }}>Miedo</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#40E0D0', fontWeight: 'bold' }}>●</span>
-                            <span>Sorpresa</span>
+                            <span style={{ color: '#06b6d4', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#0e7490', fontWeight: 'bold' }}>Sorpresa</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#4169E1', fontWeight: 'bold' }}>●</span>
-                            <span>Tristeza</span>
+                            <span style={{ color: '#2563eb', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#1e293b', fontWeight: 'bold' }}>Tristeza</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#8A2BE2', fontWeight: 'bold' }}>●</span>
-                            <span>Disgusto</span>
+                            <span style={{ color: '#7c3aed', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#581c87', fontWeight: 'bold' }}>Disgusto</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#FF00FF', fontWeight: 'bold' }}>●</span>
-                            <span>Enfado</span>
+                            <span style={{ color: '#db2777', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#a21caf', fontWeight: 'bold' }}>Enfado</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#FFA500', fontWeight: 'bold' }}>●</span>
-                            <span>Anticipación</span>
+                            <span style={{ color: '#ea580c', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#b45309', fontWeight: 'bold' }}>Anticipación</span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <span style={{ color: '#FFB347', fontWeight: 'bold' }}>●</span>
-                            <span>Combinaciones</span>
+                            <span style={{ color: '#f59e42', fontWeight: 'bold' }}>●</span>
+                            <span style={{ color: '#b45309', fontWeight: 'bold' }}>Combinaciones</span>
                           </div>
                         </div>
                       </div>
