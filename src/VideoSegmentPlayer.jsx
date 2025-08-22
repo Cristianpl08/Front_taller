@@ -27,6 +27,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   // Estado para el tiempo sincronizado entre video y WaveSurfer
   const [synchronizedTime, setSynchronizedTime] = useState(0);
   const [zoomLevel, setZoomLevel] = useState(1);
+  // Estado para controlar si está reproduciendo
+  const [isPlaying, setIsPlaying] = useState(false);
   // Estado para la selección (ya no se usa, los segmentos vienen de la API)
   const [segments, setSegments] = useState(propSegments); // Estado para los segmentos
   const [jsonFile, setJsonFile] = useState(null); // Estado para el archivo JSON subido
@@ -418,6 +420,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
     const handlePlay = () => {
       try {
+        setIsPlaying(true);
         // Sincronizar audio si está disponible
         if (audio && projectData?.audiofinal) {
           audio.currentTime = video.currentTime;
@@ -433,6 +436,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
     const handlePause = () => {
       try {
+        setIsPlaying(false);
         // Pausar audio si está disponible
         if (audio && projectData?.audiofinal) {
           audio.pause();
@@ -457,18 +461,33 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       }
     };
 
+    const handleEnded = () => {
+      setIsPlaying(false);
+    };
+
     video.addEventListener('timeupdate', handleTimeUpdate);
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     video.addEventListener('seeked', handleSeeked);
+    video.addEventListener('ended', handleEnded);
     
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
       video.removeEventListener('seeked', handleSeeked);
+      video.removeEventListener('ended', handleEnded);
     };
   }, [isUserSeeking, segments, projectData?.audiofinal]);
+
+  // Sincronizar estado inicial del botón play/pause
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Sincronizar estado inicial con el estado real del video
+    setIsPlaying(!video.paused);
+  }, [videoUrl]);
 
   // Actualizar tiempo cada 100ms para mostrar en la UI
   useEffect(() => {
@@ -2028,6 +2047,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     if (videoRef.current && wavesurferRef.current) {
                       try {
                         if (videoRef.current.paused) {
+                          setIsPlaying(true);
                           videoRef.current.play();
                           // Sincronizar audio si está disponible
                           if (audioRef.current && projectData?.audiofinal) {
@@ -2039,6 +2059,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                             wavesurferRef.current.play();
                           }
                         } else {
+                          setIsPlaying(false);
                           videoRef.current.pause();
                           // Pausar audio si está disponible
                           if (audioRef.current && projectData?.audiofinal) {
@@ -2080,7 +2101,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     e.currentTarget.style.transform = 'scale(1)';
                   }}
                 >
-                  ▶
+                  {isPlaying ? '⏸' : '▶'}
                 </button>
                 
                 {/* Control de adelantar 10 segundos */}
