@@ -448,35 +448,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
 
     const handleSeeked = () => {
       try {
-        // Sincronizar audio después del seek
-        if (audio && projectData?.audiofinal) {
-          audio.currentTime = video.currentTime;
-        }
-        // Sincronizar WaveSurfer después del seek
-        if (video.duration && wavesurferRef.current) {
-          const progress = video.currentTime / video.duration;
-          wavesurferRef.current.seekTo(progress);
-        }
-        // Actualizar el tiempo sincronizado
+        const progress = video.currentTime / video.duration;
+        wavesurferRef.current.seekTo(progress);
         setCurrentTime(video.currentTime);
         setSynchronizedTime(video.currentTime);
       } catch (error) {
-        console.warn('Error sincronizando después del seek:', error);
-      }
-    };
-
-    // Sincronizar cuando el usuario arrastra la barra de progreso del video
-    const handleSeeking = () => {
-      if (!isUserSeeking && video.duration && wavesurferRef.current) {
-        try {
-          const progress = video.currentTime / video.duration;
-          wavesurferRef.current.seekTo(progress);
-          // Actualizar el tiempo sincronizado
-          setCurrentTime(video.currentTime);
-          setSynchronizedTime(video.currentTime);
-        } catch (error) {
-          console.warn('Error sincronizando durante seek del video:', error);
-        }
+        console.warn('Error sincronizando durante seek del video:', error);
       }
     };
 
@@ -484,14 +461,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     video.addEventListener('play', handlePlay);
     video.addEventListener('pause', handlePause);
     video.addEventListener('seeked', handleSeeked);
-    video.addEventListener('seeking', handleSeeking);
     
     return () => {
       video.removeEventListener('timeupdate', handleTimeUpdate);
       video.removeEventListener('play', handlePlay);
       video.removeEventListener('pause', handlePause);
       video.removeEventListener('seeked', handleSeeked);
-      video.removeEventListener('seeking', handleSeeking);
     };
   }, [isUserSeeking, segments, projectData?.audiofinal]);
 
@@ -1886,282 +1861,346 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
             </div>
           </div>
           
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'flex-start', 
-            gap: '1em',
+          {/* Contenedor del waveform con controles integrados */}
+          <div className="vsp-waveform-container" style={{ 
             width: '100%',
-            maxWidth: '1800px'
+            maxWidth: '100%',
+            marginBottom: '1rem',
+            position: 'relative'
           }}>
-            {/* Sidebar de controles */}
+            {/* Indicador de tiempo del video */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr',
-              gap: '0.5em',
-              padding: '0.5em',
-              background: '#374151',
-              borderRadius: '8px',
-              minWidth: '200px'
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '1rem',
+              marginBottom: '0.5rem',
+              padding: '0.5rem',
+              background: 'rgba(55, 65, 81, 0.1)',
+              borderRadius: '4px',
+              fontSize: '0.9rem',
+              color: '#374151'
             }}>
-              {/* Controles de zoom */}
-              <button
-                onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.25))}
-                title="Zoom Out"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>-</span>
-              </button>
-              <button
-                onClick={() => setZoomLevel(z => Math.min(5, z + 0.25))}
-                title="Zoom In"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>+</span>
-              </button>
-              
-              {/* Controles de reproducción de video */}
-              <button 
-                onClick={() => {
-                  if (videoRef.current && wavesurferRef.current) {
-                    try {
-                      if (videoRef.current.paused) {
-                        videoRef.current.play();
-                        // Sincronizar audio si está disponible
-                        if (audioRef.current && projectData?.audiofinal) {
-                          audioRef.current.currentTime = videoRef.current.currentTime;
-                          audioRef.current.play();
-                        }
-                        // Iniciar reproducción en WaveSurfer
-                        if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
-                          wavesurferRef.current.play();
-                        }
-                      } else {
-                        videoRef.current.pause();
-                        // Pausar audio si está disponible
-                        if (audioRef.current && projectData?.audiofinal) {
-                          audioRef.current.pause();
-                        }
-                        // Pausar reproducción en WaveSurfer
-                        if (wavesurferRef.current && wavesurferRef.current.isPlaying()) {
-                          wavesurferRef.current.pause();
-                        }
-                      }
-                    } catch (error) {
-                      console.error('Error en reproducción:', error);
-                    }
-                  }
-                }}
-                title="Play/Pause"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>▶</span>
-              </button>
-              
-              {/* Control de retroceder 10 segundos */}
-              <button 
-                onClick={() => {
-                  if (videoRef.current && wavesurferRef.current) {
-                    try {
-                      const newTime = Math.max(0, videoRef.current.currentTime - 10);
-                      videoRef.current.currentTime = newTime;
-                      
-                      // Sincronizar audio si está disponible
-                      if (audioRef.current && projectData?.audiofinal) {
-                        audioRef.current.currentTime = newTime;
-                      }
-                      
-                      // Sincronizar WaveSurfer
-                      if (videoRef.current.duration) {
-                        const progress = newTime / videoRef.current.duration;
-                        wavesurferRef.current.seekTo(progress);
-                      }
-                    } catch (error) {
-                      console.error('Error al retroceder:', error);
-                    }
-                  }
-                }}
-                title="Retroceder 10s"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>⏪</span>
-              </button>
-              
-              {/* Control de adelantar 10 segundos */}
-              <button 
-                onClick={() => {
-                  if (videoRef.current && wavesurferRef.current) {
-                    try {
-                      const newTime = Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + 10);
-                      videoRef.current.currentTime = newTime;
-                      
-                      // Sincronizar audio si está disponible
-                      if (audioRef.current && projectData?.audiofinal) {
-                        audioRef.current.currentTime = newTime;
-                      }
-                      
-                      // Sincronizar WaveSurfer
-                      if (videoRef.current.duration) {
-                        const progress = newTime / videoRef.current.duration;
-                        wavesurferRef.current.seekTo(progress);
-                      }
-                    } catch (error) {
-                      console.error('Error al adelantar:', error);
-                    }
-                  }
-                }}
-                title="Adelantar 10s"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  color: '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <span style={{ fontSize: '18px', fontWeight: 'bold' }}>⏩</span>
-              </button>
-              
-              {/* Controles de navegación */}
-              <button 
-                onClick={goToPrevSegment} 
-                disabled={currentSegmentIdx <= 0}
-                title="Segmento Anterior"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: currentSegmentIdx <= 0 ? 'not-allowed' : 'pointer',
-                  color: currentSegmentIdx <= 0 ? 'rgba(255,255,255,0.3)' : '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => {
-                  if (currentSegmentIdx > 0) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  }
-                }}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <ArrowLeftIcon style={{ fontSize: '20px' }} />
-              </button>
-              <button 
-                onClick={goToNextSegment} 
-                disabled={currentSegmentIdx >= segments.length - 1}
-                title="Segmento Siguiente"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderRadius: '50%',
-                  width: 40,
-                  height: 40,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: currentSegmentIdx >= segments.length - 1 ? 'not-allowed' : 'pointer',
-                  color: currentSegmentIdx >= segments.length - 1 ? 'rgba(255,255,255,0.3)' : '#fff',
-                  transition: 'background 0.2s'
-                }}
-                onMouseOver={e => {
-                  if (currentSegmentIdx < segments.length - 1) {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                }}
-                onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-              >
-                <ArrowRightIcon style={{ fontSize: '20px' }} />
-              </button>
+              <span>⏱️ Tiempo: {formatTime(synchronizedTime)}</span>
+              {videoRef.current?.duration && (
+                <span>/ {formatTime(videoRef.current.duration)}</span>
+              )}
             </div>
             
-            {/* Contenedor del waveform */}
-            <div className="vsp-waveform-container" style={{ flex: 1 }}>
-              {/* Indicador de tiempo del video */}
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '1rem',
-                marginBottom: '0.5rem',
-                padding: '0.5rem',
-                background: 'rgba(55, 65, 81, 0.1)',
-                borderRadius: '4px',
-                fontSize: '0.9rem',
-                color: '#374151'
+            <div id="waveform" className="vsp-waveform" />
+            
+            <div id="timeline" className="vsp-timeline" />
+            
+            {/* Controles debajo del timeline */}
+            <div className="vsp-controls-container" style={{
+              display: 'flex',
+              justifyContent: 'center',
+              marginTop: '1rem'
+            }}>
+              <div className="vsp-controls-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(7, 1fr)',
+                gap: '0.5em',
+                padding: '0.75em 1.5em',
+                background: 'rgba(55, 65, 81, 0.95)',
+                borderRadius: '12px',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.3)',
+                border: '2px solid #4b5563',
+                backdropFilter: 'blur(8px)'
               }}>
-                <span>⏱️ Tiempo: {formatTime(synchronizedTime)}</span>
-                {videoRef.current?.duration && (
-                  <span>/ {formatTime(videoRef.current.duration)}</span>
-                )}
+                {/* Controles de zoom */}
+                <button
+                  onClick={() => setZoomLevel(z => Math.max(0.1, z - 0.25))}
+                  title="Zoom Out"
+                  className="vsp-control-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    transition: 'all 0.2s ease',
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  -
+                </button>
+                <button
+                  onClick={() => setZoomLevel(z => Math.min(5, z + 0.25))}
+                  title="Zoom In"
+                  className="vsp-control-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    transition: 'all 0.2s ease',
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  +
+                </button>
+                
+                {/* Control de retroceder 10 segundos */}
+                <button 
+                  onClick={() => {
+                    if (videoRef.current && wavesurferRef.current) {
+                      try {
+                        const newTime = Math.max(0, videoRef.current.currentTime - 10);
+                        videoRef.current.currentTime = newTime;
+                        
+                        // Sincronizar audio si está disponible
+                        if (audioRef.current && projectData?.audiofinal) {
+                          audioRef.current.currentTime = newTime;
+                        }
+                        
+                        // Sincronizar WaveSurfer
+                        if (videoRef.current.duration) {
+                          const progress = newTime / videoRef.current.duration;
+                          wavesurferRef.current.seekTo(progress);
+                        }
+                      } catch (error) {
+                        console.error('Error al retroceder:', error);
+                      }
+                    }
+                  }}
+                  title="Retroceder 10s"
+                  className="vsp-control-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    transition: 'all 0.2s ease',
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  ⏪
+                </button>
+                
+                {/* Controles de reproducción de video */}
+                <button 
+                  onClick={() => {
+                    if (videoRef.current && wavesurferRef.current) {
+                      try {
+                        if (videoRef.current.paused) {
+                          videoRef.current.play();
+                          // Sincronizar audio si está disponible
+                          if (audioRef.current && projectData?.audiofinal) {
+                            audioRef.current.currentTime = videoRef.current.currentTime;
+                            audioRef.current.play();
+                          }
+                          // Iniciar reproducción en WaveSurfer
+                          if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
+                            wavesurferRef.current.play();
+                          }
+                        } else {
+                          videoRef.current.pause();
+                          // Pausar audio si está disponible
+                          if (audioRef.current && projectData?.audiofinal) {
+                            audioRef.current.pause();
+                          }
+                          // Pausar reproducción en WaveSurfer
+                          if (wavesurferRef.current && wavesurferRef.current.isPlaying()) {
+                            wavesurferRef.current.pause();
+                          }
+                        }
+                      } catch (error) {
+                        console.error('Error en reproducción:', error);
+                      }
+                    }
+                  }}
+                  title="Play/Pause"
+                  className="vsp-control-btn-main"
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.2)',
+                    border: '2px solid #ef4444',
+                    borderRadius: '50%',
+                    width: 50,
+                    height: 50,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    transition: 'all 0.2s ease',
+                    fontSize: '20px',
+                    fontWeight: 'bold'
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = '#ef4444';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.2)';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  ▶
+                </button>
+                
+                {/* Control de adelantar 10 segundos */}
+                <button 
+                  onClick={() => {
+                    if (videoRef.current && wavesurferRef.current) {
+                      try {
+                        const newTime = Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + 10);
+                        videoRef.current.currentTime = newTime;
+                        
+                        // Sincronizar audio si está disponible
+                        if (audioRef.current && projectData?.audiofinal) {
+                          audioRef.current.currentTime = newTime;
+                        }
+                        
+                        // Sincronizar WaveSurfer
+                        if (videoRef.current.duration) {
+                          const progress = newTime / videoRef.current.duration;
+                          wavesurferRef.current.seekTo(progress);
+                        }
+                      } catch (error) {
+                        console.error('Error al adelantar:', error);
+                      }
+                    }
+                  }}
+                  title="Adelantar 10s"
+                  className="vsp-control-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    color: '#fff',
+                    transition: 'all 0.2s ease',
+                    fontSize: '18px',
+                    fontWeight: 'bold'
+                  }}
+                  onMouseOver={e => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  ⏩
+                </button>
+                
+                {/* Controles de navegación */}
+                <button 
+                  onClick={goToPrevSegment} 
+                  disabled={currentSegmentIdx <= 0}
+                  title="Segmento Anterior"
+                  className="vsp-control-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: currentSegmentIdx <= 0 ? 'not-allowed' : 'pointer',
+                    color: currentSegmentIdx <= 0 ? 'rgba(255,255,255,0.3)' : '#fff',
+                    transition: 'all 0.2s ease',
+                    opacity: currentSegmentIdx <= 0 ? 0.5 : 1
+                  }}
+                  onMouseOver={e => {
+                    if (currentSegmentIdx > 0) {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  <ArrowLeftIcon style={{ fontSize: '20px' }} />
+                </button>
+                <button 
+                  onClick={goToNextSegment} 
+                  disabled={currentSegmentIdx >= segments.length - 1}
+                  title="Segmento Siguiente"
+                  className="vsp-control-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: 44,
+                    height: 44,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: currentSegmentIdx >= segments.length - 1 ? 'not-allowed' : 'pointer',
+                    color: currentSegmentIdx >= segments.length - 1 ? 'rgba(255,255,255,0.3)' : '#fff',
+                    transition: 'all 0.2s ease',
+                    opacity: currentSegmentIdx >= segments.length - 1 ? 0.5 : 1
+                  }}
+                  onMouseOver={e => {
+                    if (currentSegmentIdx < segments.length - 1) {
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                      e.currentTarget.style.transform = 'scale(1.1)';
+                    }
+                  }}
+                  onMouseOut={e => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                >
+                  <ArrowRightIcon style={{ fontSize: '20px' }} />
+                </button>
               </div>
-              
-              <div id="waveform" className="vsp-waveform" />
-              <div id="timeline" className="vsp-timeline" />
             </div>
           </div>
           <div className="vsp-segments">
