@@ -307,21 +307,17 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   }, [projectData]);
 
-  // Función para sincronización completa entre video, audio y WaveSurfer
+  // Función para sincronización completa entre video y WaveSurfer
   const syncAllMedia = (targetTime, source = 'video') => {
     try {
       if (!videoRef.current || !wavesurferRef.current) return;
       
       const video = videoRef.current;
-      const audio = audioRef.current;
       
       if (source === 'wavesurfer') {
-        // Si el cambio viene de WaveSurfer, sincronizar video y audio
+        // Si el cambio viene de WaveSurfer, sincronizar video
         if (video.duration) {
           video.currentTime = targetTime;
-          if (audio && projectData?.audiofinal) {
-            audio.currentTime = targetTime;
-          }
           // Actualizar el tiempo sincronizado
           setCurrentTime(targetTime);
           setSynchronizedTime(targetTime);
@@ -330,9 +326,6 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         // Si el cambio viene de una región, sincronizar todo
         if (video.duration) {
           video.currentTime = targetTime;
-          if (audio && projectData?.audiofinal) {
-            audio.currentTime = targetTime;
-          }
           // Actualizar el tiempo sincronizado
           setCurrentTime(targetTime);
           setSynchronizedTime(targetTime);
@@ -345,14 +338,11 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           }, 50);
         }
       } else {
-        // Si el cambio viene del video, sincronizar WaveSurfer y audio
+        // Si el cambio viene del video, sincronizar WaveSurfer
         if (video.duration) {
           const progress = targetTime / video.duration;
           if (wavesurferRef.current) {
             wavesurferRef.current.seekTo(progress);
-          }
-          if (audio && projectData?.audiofinal) {
-            audio.currentTime = targetTime;
           }
           // Actualizar el tiempo sincronizado
           setCurrentTime(targetTime);
@@ -391,10 +381,9 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     };
   }, [videoUrl, wavesurferRef.current]);
 
-  // Sincronización principal entre video, audio y WaveSurfer
+  // Sincronización principal entre video y WaveSurfer
   useEffect(() => {
     const video = videoRef.current;
-    const audio = audioRef.current;
     if (!video || !wavesurferRef.current) return;
 
     const handleTimeUpdate = () => {
@@ -421,11 +410,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     const handlePlay = () => {
       try {
         setIsPlaying(true);
-        // Sincronizar audio si está disponible
-        if (audio && projectData?.audiofinal) {
-          audio.currentTime = video.currentTime;
-        }
-        // Sincronizar WaveSurfer
+        // Solo sincronizar WaveSurfer, no el audioRef separado
         if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
           wavesurferRef.current.play();
         }
@@ -437,11 +422,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     const handlePause = () => {
       try {
         setIsPlaying(false);
-        // Pausar audio si está disponible
-        if (audio && projectData?.audiofinal) {
-          audio.pause();
-        }
-        // Pausar WaveSurfer
+        // Solo pausar WaveSurfer, no el audioRef separado
         if (wavesurferRef.current && wavesurferRef.current.isPlaying()) {
           wavesurferRef.current.pause();
         }
@@ -536,23 +517,6 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     return () => clearInterval(interval);
   }, [wavesurferRef.current]);
 
-  // Sincronizar audio con video cuando se hace seek manual
-  useEffect(() => {
-    const video = videoRef.current;
-    const audio = audioRef.current;
-    
-    if (!video || !audio || !projectData?.audiofinal) return;
-
-    const handleSeeking = () => {
-      if (!isUserSeeking) {
-        audio.currentTime = video.currentTime;
-      }
-    };
-
-    video.addEventListener('seeking', handleSeeking);
-    return () => video.removeEventListener('seeking', handleSeeking);
-  }, [projectData?.audiofinal, isUserSeeking]);
-
   // Función para obtener el color de una emoción
   const getEmotionColor = (emotionValue) => {
     const emotion = emotions.find(e => e.value === emotionValue);
@@ -615,12 +579,9 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
         }
 
         console.log("Cargando audio URL:", audioUrl);
-        if (projectData?.audiofinal) {
-          // Si tenemos audiofinal, conectar WaveSurfer al elemento de audio
-          wavesurferRef.current.load(audioUrl, null, audioRef.current);
-        } else {
-          wavesurferRef.current.load(audioUrl);
-        }
+        // Siempre cargar el audio directamente en WaveSurfer, no usar el elemento audioRef
+        // para evitar duplicación de audio
+        wavesurferRef.current.load(audioUrl);
         setWaveLoading(true);
 
         wavesurferRef.current.on('ready', () => {
@@ -1997,12 +1958,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                         const newTime = Math.max(0, videoRef.current.currentTime - 10);
                         videoRef.current.currentTime = newTime;
                         
-                        // Sincronizar audio si está disponible
-                        if (audioRef.current && projectData?.audiofinal) {
-                          audioRef.current.currentTime = newTime;
-                        }
-                        
-                        // Sincronizar WaveSurfer
+                        // Solo sincronizar WaveSurfer, no el audioRef separado
                         if (videoRef.current.duration) {
                           const progress = newTime / videoRef.current.duration;
                           wavesurferRef.current.seekTo(progress);
@@ -2049,23 +2005,15 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                         if (videoRef.current.paused) {
                           setIsPlaying(true);
                           videoRef.current.play();
-                          // Sincronizar audio si está disponible
-                          if (audioRef.current && projectData?.audiofinal) {
-                            audioRef.current.currentTime = videoRef.current.currentTime;
-                            audioRef.current.play();
-                          }
-                          // Iniciar reproducción en WaveSurfer
+                          // Solo usar WaveSurfer para el audio, no reproducir audioRef por separado
+                          // ya que WaveSurfer ya maneja el audio
                           if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
                             wavesurferRef.current.play();
                           }
                         } else {
                           setIsPlaying(false);
                           videoRef.current.pause();
-                          // Pausar audio si está disponible
-                          if (audioRef.current && projectData?.audiofinal) {
-                            audioRef.current.pause();
-                          }
-                          // Pausar reproducción en WaveSurfer
+                          // Solo pausar WaveSurfer, no el audioRef por separado
                           if (wavesurferRef.current && wavesurferRef.current.isPlaying()) {
                             wavesurferRef.current.pause();
                           }
@@ -2112,12 +2060,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                         const newTime = Math.min(videoRef.current.duration || 0, videoRef.current.currentTime + 10);
                         videoRef.current.currentTime = newTime;
                         
-                        // Sincronizar audio si está disponible
-                        if (audioRef.current && projectData?.audiofinal) {
-                          audioRef.current.currentTime = newTime;
-                        }
-                        
-                        // Sincronizar WaveSurfer
+                        // Solo sincronizar WaveSurfer, no el audioRef separado
                         if (videoRef.current.duration) {
                           const progress = newTime / videoRef.current.duration;
                           wavesurferRef.current.seekTo(progress);
