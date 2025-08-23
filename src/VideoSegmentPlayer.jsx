@@ -42,6 +42,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [editableDescription, setEditableDescription] = useState('');
   const [editableProsody1, setEditableProsody1] = useState('');
   const [editableProsody2, setEditableProsody2] = useState('');
+  const [editableProsody3, setEditableProsody3] = useState(''); // Nuevo campo para Prosody 3
   const [editableMemory, setEditableMemory] = useState(''); // Nuevo campo para el recuerdo activado
   
   // Estado para mostrar feedback de guardado
@@ -169,7 +170,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!user || !segment) {
       console.log('❌ No hay usuario o segmento');
-      return { description: '', prosody1: '', prosody2: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
     }
     
     // Primero intentar obtener datos del localStorage (más actualizados)
@@ -192,7 +193,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!fullSegment || !fullSegment.descriptions_prosody) {
       console.log('❌ No hay segmento completo o descriptions_prosody');
-      return { description: '', prosody1: '', prosody2: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
     }
     
     const userEntry = fullSegment.descriptions_prosody.find(entry => entry.user_id === user._id);
@@ -200,13 +201,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!userEntry) {
       console.log('❌ No se encontró entrada para el usuario actual');
-      return { description: '', prosody1: '', prosody2: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
     }
     
     const result = {
       description: userEntry.description || '',
       prosody1: userEntry['prosody 1'] || '',
       prosody2: userEntry['prosody 2'] || '',
+      prosody3: userEntry['prosody 3'] || '',
       memory: userEntry.memory || ''
     };
     
@@ -253,12 +255,14 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableDescription(userData.description);
       setEditableProsody1(userData.prosody1);
       setEditableProsody2(userData.prosody2);
+      setEditableProsody3(userData.prosody3);
       setEditableMemory(userData.memory);
     } else {
       // Limpiar campos si no hay segmento seleccionado
       setEditableDescription('');
       setEditableProsody1('');
       setEditableProsody2('');
+      setEditableProsody3('');
       setEditableMemory('');
     }
   }, [currentSegmentIdx, segments, user]);
@@ -1638,10 +1642,22 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 </div>
               )}
               
-              {/* Actividad 3 - Descripción original y editable */}
+              {/* Actividad 3 - Vacía por ahora */}
               {selectedActivity === 'actividad3' && selectedActivity !== 'actividad1' && (
+                <div style={{
+                  textAlign: 'center',
+                  padding: '2rem',
+                  color: '#9ca3af',
+                  fontSize: '1rem'
+                }}>
+                  <p>Actividad 3 - Contenido por definir</p>
+                </div>
+              )}
+              
+              {/* Actividad 4 - Solo descripción editable */}
+              {selectedActivity === 'actividad4' && selectedActivity !== 'actividad1' && (
                 <>
-                  {/* Pregunta de la Actividad 3 - Solo visible cuando hay segmento activo */}
+                  {/* Pregunta de la Actividad 4 - Solo visible cuando hay segmento activo */}
                   {currentSegmentIdx >= 0 && (
                     <div style={{
                       background: 'rgba(156,163,175,0.1)',
@@ -1655,7 +1671,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                         color: '#6b7280',
                         fontSize: '1.1rem'
                       }}>
-                        📊 Actividad 3
+                        📊 Actividad 4
                       </h3>
                       <p style={{
                         margin: '0',
@@ -1667,50 +1683,6 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       </p>
                     </div>
                   )}
-                  
-                  {/* Sección Original */}
-                  <div style={{
-                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
-                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
-                    transition: 'opacity 0.3s ease'
-                  }}>
-                    <div style={{ 
-                      background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
-                      padding: '0.75em', 
-                      borderRadius: '8px',
-                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`
-                    }}>
-                      <label style={{ 
-                        display: 'block', 
-                        marginBottom: '0.5em', 
-                        fontWeight: 'bold',
-                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
-                      }}>
-                        Descripción Original:
-                      </label>
-                      <textarea
-                        value={currentSegmentIdx >= 0 ? segments[currentSegmentIdx]?.description || '' : ''}
-                        readOnly
-                        disabled={currentSegmentIdx === -1}
-                        style={{
-                          width: '100%',
-                          minHeight: '40px',
-                          maxHeight: '60px',
-                          padding: '0.4em',
-                          border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
-                          borderRadius: '4px',
-                          resize: 'vertical',
-                          fontFamily: 'inherit',
-                          fontSize: '14px',
-                          background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
-                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
-                          cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
-                          boxSizing: 'border-box'
-                        }}
-                        placeholder="Sin descripción disponible"
-                      />
-                    </div>
-                  </div>
                   
                   {/* Sección Nueva (Editable) */}
                   <div style={{
@@ -1772,6 +1744,91 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           boxSizing: 'border-box'
                         }}
                       />
+                    </div>
+                  </div>
+                  
+                  {/* Campo Prosody 3 */}
+                  <div style={{
+                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                    transition: 'opacity 0.3s ease'
+                  }}>
+                    <div className="vsp-field-editable-block" style={{ 
+                      background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                      padding: '0.75em', 
+                      borderRadius: '8px',
+                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
+                      marginBottom: '0.75em'
+                    }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '0.5em', 
+                        fontWeight: 'bold',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                      }}>
+                        Prosody 3:
+                        {editableProsody3 && (
+                          <span style={{
+                            marginLeft: '0.5em',
+                            fontSize: '0.9em',
+                            fontWeight: 'bold',
+                            color: getEmotionColor(editableProsody3),
+                            textShadow: '0 0 2px rgba(0,0,0,0.3)'
+                          }}>
+                            ● {editableProsody3}
+                          </span>
+                        )}
+                        {saveStatus['prosody 3'] && (
+                          <span style={{
+                            marginLeft: '0.5em',
+                            fontSize: '0.8em',
+                            fontWeight: 'normal',
+                            color: saveStatus['prosody 3'] === 'saving' ? '#f59e0b' :
+                                   saveStatus['prosody 3'] === 'saved-local' ? '#10b981' :
+                                   saveStatus['prosody 3'] === 'saved' ? '#059669' :
+                                   saveStatus['prosody 3'] === 'error' ? '#ef4444' : '#6b7280'
+                          }}>
+                            {saveStatus['prosody 3'] === 'saving' ? '⏳ Guardando...' :
+                             saveStatus['prosody 3'] === 'saved-local' ? '💾 Guardado localmente' :
+                             saveStatus['prosody 3'] === 'saved' ? '✅ Guardado' :
+                             saveStatus['prosody 3'] === 'error' ? '❌ Error' : ''}
+                          </span>
+                        )}
+                      </label>
+                      <select
+                        value={editableProsody3}
+                        onChange={(e) => setEditableProsody3(e.target.value)}
+                        onBlur={(e) => handleFieldBlur('prosody 3', e.target.value)}
+                        disabled={currentSegmentIdx === -1}
+                        style={{
+                          width: '100%',
+                          padding: '0.4em',
+                          border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody3 ? getEmotionColor(editableProsody3) : '#cbd5e1'}`,
+                          borderRadius: '4px',
+                          fontFamily: 'inherit',
+                          fontSize: '14px',
+                          background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody3 ? `${getEmotionColor(editableProsody3)}15` : '#ffffff',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody3 ? getEmotionColor(editableProsody3) : '#000',
+                          cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
+                          boxSizing: 'border-box',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        <option value="">Selecciona una emoción...</option>
+                        {emotions.map((emotion, index) => (
+                          <option 
+                            key={index} 
+                            value={emotion.value}
+                            style={{ 
+                              color: emotion.color, 
+                              fontWeight: 'bold',
+                              backgroundColor: '#ffffff'
+                            }}
+                          >
+                            {emotion.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                 </>

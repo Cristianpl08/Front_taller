@@ -273,6 +273,7 @@ function App() {
                         style={{
                           padding: '0.75rem 1rem',
                           cursor: 'pointer',
+                          borderBottom: '1px solid #f1f5f9',
                           background: selectedActivity === 'actividad3' ? '#fef3c7' : 'transparent',
                           color: selectedActivity === 'actividad3' ? '#92400e' : '#374151',
                           fontWeight: selectedActivity === 'actividad3' ? '600' : '400'
@@ -281,6 +282,20 @@ function App() {
                         onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad3' ? '#fef3c7' : 'transparent'}
                       >
                         📊 Actividad 3
+                      </div>
+                      <div
+                        onClick={() => setSelectedActivity('actividad4')}
+                        style={{
+                          padding: '0.75rem 1rem',
+                          cursor: 'pointer',
+                          background: selectedActivity === 'actividad4' ? '#fef3c7' : 'transparent',
+                          color: selectedActivity === 'actividad4' ? '#92400e' : '#374151',
+                          fontWeight: selectedActivity === 'actividad4' ? '600' : '400'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad4' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad4' ? '#fef3c7' : 'transparent'}
+                      >
+                        📝 Actividad 4
                       </div>
                     </div>
                   )}
