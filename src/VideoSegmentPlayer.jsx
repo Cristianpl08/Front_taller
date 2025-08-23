@@ -43,6 +43,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [editableProsody1, setEditableProsody1] = useState('');
   const [editableProsody2, setEditableProsody2] = useState('');
   const [editableProsody3, setEditableProsody3] = useState(''); // Nuevo campo para Prosody 3
+  const [editableProsody4, setEditableProsody4] = useState(''); // Nuevo campo para Prosody 4
   const [editableMemory, setEditableMemory] = useState(''); // Nuevo campo para el recuerdo activado
   
   // Estado para mostrar feedback de guardado
@@ -170,7 +171,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!user || !segment) {
       console.log('❌ No hay usuario o segmento');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '' };
     }
     
     // Primero intentar obtener datos del localStorage (más actualizados)
@@ -193,7 +194,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!fullSegment || !fullSegment.descriptions_prosody) {
       console.log('❌ No hay segmento completo o descriptions_prosody');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '' };
     }
     
     const userEntry = fullSegment.descriptions_prosody.find(entry => entry.user_id === user._id);
@@ -201,7 +202,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!userEntry) {
       console.log('❌ No se encontró entrada para el usuario actual');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '' };
     }
     
     const result = {
@@ -209,6 +210,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       prosody1: userEntry['prosody 1'] || '',
       prosody2: userEntry['prosody 2'] || '',
       prosody3: userEntry['prosody 3'] || '',
+      prosody4: userEntry['prosody 4'] || '',
       memory: userEntry.memory || ''
     };
     
@@ -256,6 +258,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableProsody1(userData.prosody1);
       setEditableProsody2(userData.prosody2);
       setEditableProsody3(userData.prosody3);
+      setEditableProsody4(userData.prosody4);
       setEditableMemory(userData.memory);
     } else {
       // Limpiar campos si no hay segmento seleccionado
@@ -263,6 +266,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableProsody1('');
       setEditableProsody2('');
       setEditableProsody3('');
+      setEditableProsody4('');
       setEditableMemory('');
     }
   }, [currentSegmentIdx, segments, user]);
@@ -1747,88 +1751,176 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     </div>
                   </div>
                   
-                  {/* Campo Prosody 3 */}
+                  {/* Campos Prosody 3 y Prosody 4 en dos columnas */}
                   <div style={{
                     opacity: currentSegmentIdx === -1 ? 0.5 : 1,
                     pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
                     transition: 'opacity 0.3s ease'
                   }}>
-                    <div className="vsp-field-editable-block" style={{ 
-                      background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
-                      padding: '0.75em', 
-                      borderRadius: '8px',
-                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
-                      marginBottom: '0.75em'
+                    <div className="vsp-fields-prosody-row" style={{ 
+                      display: 'flex',
+                      gap: '0.75em',
+                      flexWrap: 'wrap'
                     }}>
-                      <label style={{ 
-                        display: 'block', 
-                        marginBottom: '0.5em', 
-                        fontWeight: 'bold',
-                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                      {/* Campo Prosody 3 */}
+                      <div className="vsp-field-editable-block" style={{ 
+                        flex: '1',
+                        minWidth: '200px',
+                        background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                        padding: '0.75em', 
+                        borderRadius: '8px',
+                        border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
                       }}>
-                        Prosody 3:
-                        {editableProsody3 && (
-                          <span style={{
-                            marginLeft: '0.5em',
-                            fontSize: '0.9em',
-                            fontWeight: 'bold',
-                            color: getEmotionColor(editableProsody3),
-                            textShadow: '0 0 2px rgba(0,0,0,0.3)'
-                          }}>
-                            ● {editableProsody3}
-                          </span>
-                        )}
-                        {saveStatus['prosody 3'] && (
-                          <span style={{
-                            marginLeft: '0.5em',
-                            fontSize: '0.8em',
-                            fontWeight: 'normal',
-                            color: saveStatus['prosody 3'] === 'saving' ? '#f59e0b' :
-                                   saveStatus['prosody 3'] === 'saved-local' ? '#10b981' :
-                                   saveStatus['prosody 3'] === 'saved' ? '#059669' :
-                                   saveStatus['prosody 3'] === 'error' ? '#ef4444' : '#6b7280'
-                          }}>
-                            {saveStatus['prosody 3'] === 'saving' ? '⏳ Guardando...' :
-                             saveStatus['prosody 3'] === 'saved-local' ? '💾 Guardado localmente' :
-                             saveStatus['prosody 3'] === 'saved' ? '✅ Guardado' :
-                             saveStatus['prosody 3'] === 'error' ? '❌ Error' : ''}
-                          </span>
-                        )}
-                      </label>
-                      <select
-                        value={editableProsody3}
-                        onChange={(e) => setEditableProsody3(e.target.value)}
-                        onBlur={(e) => handleFieldBlur('prosody 3', e.target.value)}
-                        disabled={currentSegmentIdx === -1}
-                        style={{
-                          width: '100%',
-                          padding: '0.4em',
-                          border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody3 ? getEmotionColor(editableProsody3) : '#cbd5e1'}`,
-                          borderRadius: '4px',
-                          fontFamily: 'inherit',
-                          fontSize: '14px',
-                          background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody3 ? `${getEmotionColor(editableProsody3)}15` : '#ffffff',
-                          color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody3 ? getEmotionColor(editableProsody3) : '#000',
-                          cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
-                          boxSizing: 'border-box',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        <option value="">Selecciona una emoción...</option>
-                        {emotions.map((emotion, index) => (
-                          <option 
-                            key={index} 
-                            value={emotion.value}
-                            style={{ 
-                              color: emotion.color, 
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '0.5em', 
+                          fontWeight: 'bold',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                        }}>
+                          Prosody 3:
+                          {editableProsody3 && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.9em',
                               fontWeight: 'bold',
-                              backgroundColor: '#ffffff'
-                            }}
-                          >
-                            {emotion.label}
-                          </option>
-                        ))}
-                      </select>
+                              color: getEmotionColor(editableProsody3),
+                              textShadow: '0 0 2px rgba(0,0,0,0.3)'
+                            }}>
+                              ● {editableProsody3}
+                            </span>
+                          )}
+                          {saveStatus['prosody 3'] && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.8em',
+                              fontWeight: 'normal',
+                              color: saveStatus['prosody 3'] === 'saving' ? '#f59e0b' :
+                                     saveStatus['prosody 3'] === 'saved-local' ? '#10b981' :
+                                     saveStatus['prosody 3'] === 'saved' ? '#059669' :
+                                     saveStatus['prosody 3'] === 'error' ? '#ef4444' : '#6b7280'
+                            }}>
+                              {saveStatus['prosody 3'] === 'saving' ? '⏳ Guardando...' :
+                               saveStatus['prosody 3'] === 'saved-local' ? '💾 Guardado localmente' :
+                               saveStatus['prosody 3'] === 'saved' ? '✅ Guardado' :
+                               saveStatus['prosody 3'] === 'error' ? '❌ Error' : ''}
+                            </span>
+                          )}
+                        </label>
+                        <select
+                          value={editableProsody3}
+                          onChange={(e) => setEditableProsody3(e.target.value)}
+                          onBlur={(e) => handleFieldBlur('prosody 3', e.target.value)}
+                          disabled={currentSegmentIdx === -1}
+                          style={{
+                            width: '100%',
+                            padding: '0.4em',
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody3 ? getEmotionColor(editableProsody3) : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody3 ? `${getEmotionColor(editableProsody3)}15` : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody3 ? getEmotionColor(editableProsody3) : '#000',
+                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
+                            boxSizing: 'border-box',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          <option value="">Selecciona una emoción...</option>
+                          {emotions.map((emotion, index) => (
+                            <option 
+                              key={index} 
+                              value={emotion.value}
+                              style={{ 
+                                color: emotion.color, 
+                                fontWeight: 'bold',
+                                backgroundColor: '#ffffff'
+                              }}
+                            >
+                              {emotion.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      {/* Campo Prosody 4 */}
+                      <div className="vsp-field-editable-block" style={{ 
+                        flex: '1',
+                        minWidth: '200px',
+                        background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                        padding: '0.75em', 
+                        borderRadius: '8px',
+                        border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`
+                      }}>
+                        <label style={{ 
+                          display: 'block', 
+                          marginBottom: '0.5em', 
+                          fontWeight: 'bold',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                        }}>
+                          Prosody 4:
+                          {editableProsody4 && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.9em',
+                              fontWeight: 'bold',
+                              color: '#000000',
+                              textShadow: '0 0 2px rgba(0,0,0,0.3)'
+                            }}>
+                              ● {editableProsody4}
+                            </span>
+                          )}
+                          {saveStatus['prosody 4'] && (
+                            <span style={{
+                              marginLeft: '0.5em',
+                              fontSize: '0.8em',
+                              fontWeight: 'normal',
+                              color: saveStatus['prosody 4'] === 'saving' ? '#f59e0b' :
+                                     saveStatus['prosody 4'] === 'saved-local' ? '#10b981' :
+                                     saveStatus['prosody 4'] === 'saved' ? '#059669' :
+                                     saveStatus['prosody 4'] === 'error' ? '#ef4444' : '#6b7280'
+                            }}>
+                              {saveStatus['prosody 4'] === 'saving' ? '⏳ Guardando...' :
+                               saveStatus['prosody 4'] === 'saved-local' ? '💾 Guardado localmente' :
+                               saveStatus['prosody 4'] === 'saved' ? '✅ Guardado' :
+                               saveStatus['prosody 4'] === 'error' ? '❌ Error' : ''}
+                            </span>
+                          )}
+                        </label>
+                        <select
+                          value={editableProsody4}
+                          onChange={(e) => setEditableProsody4(e.target.value)}
+                          onBlur={(e) => handleFieldBlur('prosody 4', e.target.value)}
+                          disabled={currentSegmentIdx === -1}
+                          style={{
+                            width: '100%',
+                            padding: '0.4em',
+                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : editableProsody4 ? '#000000' : '#cbd5e1'}`,
+                            borderRadius: '4px',
+                            fontFamily: 'inherit',
+                            fontSize: '14px',
+                            background: currentSegmentIdx === -1 ? '#f1f5f9' : editableProsody4 ? '#00000015' : '#ffffff',
+                            color: currentSegmentIdx === -1 ? '#94a3b8' : editableProsody4 ? '#000000' : '#000',
+                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'pointer',
+                            boxSizing: 'border-box',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          <option value="">Selecciona intensidad...</option>
+                          {intensityOptions.map((intensity, index) => (
+                            <option 
+                              key={index} 
+                              value={intensity.value}
+                              style={{ 
+                                color: intensity.color, 
+                                fontWeight: 'bold',
+                                backgroundColor: '#ffffff'
+                              }}
+                            >
+                              {intensity.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
                   </div>
                 </>
