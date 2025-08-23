@@ -45,6 +45,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   const [editableProsody3, setEditableProsody3] = useState(''); // Nuevo campo para Prosody 3
   const [editableProsody4, setEditableProsody4] = useState(''); // Nuevo campo para Prosody 4
   const [editableMemory, setEditableMemory] = useState(''); // Nuevo campo para el recuerdo activado
+  const [editableImportance, setEditableImportance] = useState(''); // Nuevo campo para la importancia
   
   // Estado para mostrar feedback de guardado
   const [saveStatus, setSaveStatus] = useState({});
@@ -171,7 +172,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!user || !segment) {
       console.log('❌ No hay usuario o segmento');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '', importance: '' };
     }
     
     // Primero intentar obtener datos del localStorage (más actualizados)
@@ -194,7 +195,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!fullSegment || !fullSegment.descriptions_prosody) {
       console.log('❌ No hay segmento completo o descriptions_prosody');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '', importance: '' };
     }
     
     const userEntry = fullSegment.descriptions_prosody.find(entry => entry.user_id === user._id);
@@ -202,7 +203,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     
     if (!userEntry) {
       console.log('❌ No se encontró entrada para el usuario actual');
-      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '' };
+      return { description: '', prosody1: '', prosody2: '', prosody3: '', prosody4: '', memory: '', importance: '' };
     }
     
     const result = {
@@ -211,7 +212,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       prosody2: userEntry['prosody 2'] || '',
       prosody3: userEntry['prosody 3'] || '',
       prosody4: userEntry['prosody 4'] || '',
-      memory: userEntry.memory || ''
+      memory: userEntry.memory || '',
+      importance: userEntry.importance || ''
     };
     
     console.log('✅ getUserDescriptionProsody - Resultado:', result);
@@ -260,6 +262,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableProsody3(userData.prosody3);
       setEditableProsody4(userData.prosody4);
       setEditableMemory(userData.memory);
+      setEditableImportance(userData.importance);
     } else {
       // Limpiar campos si no hay segmento seleccionado
       setEditableDescription('');
@@ -268,6 +271,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       setEditableProsody3('');
       setEditableProsody4('');
       setEditableMemory('');
+      setEditableImportance('');
     }
   }, [currentSegmentIdx, segments, user]);
 
@@ -1646,16 +1650,163 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 </div>
               )}
               
-              {/* Actividad 3 - Vacía por ahora */}
+              {/* Actividad 3 - Importancia del recuerdo */}
               {selectedActivity === 'actividad3' && selectedActivity !== 'actividad1' && (
-                <div style={{
-                  textAlign: 'center',
-                  padding: '2rem',
-                  color: '#9ca3af',
-                  fontSize: '1rem'
-                }}>
-                  <p>Actividad 3 - Contenido por definir</p>
-                </div>
+                <>
+                  {/* Pregunta de la Actividad 3 - Solo visible cuando hay segmento activo */}
+                  {currentSegmentIdx >= 0 && (
+                    <div style={{
+                      background: 'rgba(156,163,175,0.1)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(156,163,175,0.2)',
+                      marginBottom: '1rem'
+                    }}>
+                      <h3 style={{
+                        margin: '0 0 0.5rem 0',
+                        color: '#6b7280',
+                        fontSize: '1.1rem'
+                      }}>
+                        📊 Actividad 3
+                      </h3>
+                      <p style={{
+                        margin: '0',
+                        color: '#374151',
+                        fontSize: '1rem',
+                        lineHeight: '1.5'
+                      }}>
+                        ¿Por qué consideras importante ese recuerdo o anécdota?
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Sección de Referencia - Memory del segmento */}
+                  <div style={{
+                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                    transition: 'opacity 0.3s ease'
+                  }}>
+                    <div style={{ 
+                      background: currentSegmentIdx === -1 ? 'rgba(30,41,59,0.05)' : 'rgba(30,41,59,0.1)', 
+                      padding: '0.75em', 
+                      borderRadius: '8px',
+                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(30,41,59,0.1)' : 'rgba(30,41,59,0.2)'}`,
+                      marginBottom: '0.75em'
+                    }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '0.5em', 
+                        fontWeight: 'bold',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                      }}>
+                        Recuerdo de Referencia:
+                      </label>
+                      <textarea
+                        value={currentSegmentIdx >= 0 ? editableMemory || '' : ''}
+                        readOnly
+                        disabled={currentSegmentIdx === -1}
+                        style={{
+                          width: '100%',
+                          minHeight: '60px',
+                          maxHeight: '80px',
+                          padding: '0.4em',
+                          border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                          borderRadius: '4px',
+                          resize: 'vertical',
+                          fontFamily: 'inherit',
+                          fontSize: '14px',
+                          background: currentSegmentIdx === -1 ? '#f1f5f9' : '#f8f9fa',
+                          color: currentSegmentIdx === -1 ? '#94a3b8' : '#000',
+                          cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'default',
+                          boxSizing: 'border-box'
+                        }}
+                        placeholder="No hay recuerdo disponible para este segmento"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sección Editable - Importancia */}
+                  <div style={{
+                    opacity: currentSegmentIdx === -1 ? 0.5 : 1,
+                    pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                    transition: 'opacity 0.3s ease'
+                  }}>
+                    <div className="vsp-field-editable-block" style={{ 
+                      background: currentSegmentIdx === -1 ? 'rgba(59,130,246,0.02)' : 'rgba(59,130,246,0.05)', 
+                      padding: '0.75em', 
+                      borderRadius: '8px',
+                      border: `1px solid ${currentSegmentIdx === -1 ? 'rgba(59,130,246,0.1)' : 'rgba(59,130,246,0.2)'}`,
+                      marginBottom: '0.75em',
+                      position: 'relative'
+                    }}>
+                      <label style={{ 
+                        display: 'block', 
+                        marginBottom: '0.5em', 
+                        fontWeight: 'bold',
+                        color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
+                      }}>
+                        Importancia:
+                        {saveStatus['importance'] && (
+                          <span style={{
+                            marginLeft: '0.5em',
+                            fontSize: '0.8em',
+                            fontWeight: 'normal',
+                            color: saveStatus['importance'] === 'saving' ? '#f59e0b' :
+                                   saveStatus['importance'] === 'saved-local' ? '#10b981' :
+                                   saveStatus['importance'] === 'saved' ? '#059669' :
+                                   saveStatus['importance'] === 'error' ? '#ef4444' : '#6b7280'
+                          }}>
+                            {saveStatus['importance'] === 'saving' ? '⏳ Guardando...' :
+                             saveStatus['importance'] === 'saved-local' ? '💾 Guardado localmente' :
+                             saveStatus['importance'] === 'saved' ? '✅ Guardado' :
+                             saveStatus['importance'] === 'error' ? '❌ Error' : ''}
+                          </span>
+                        )}
+                      </label>
+                      <textarea
+                        value={editableImportance}
+                        onChange={(e) => setEditableImportance(e.target.value)}
+                        onBlur={(e) => handleFieldBlur('importance', e.target.value)}
+                        placeholder={
+                          currentSegmentIdx === -1 
+                            ? "Selecciona un segmento para continuar..." 
+                            : !editableMemory || editableMemory.trim() === ''
+                              ? "Primero debe haber un recuerdo en la Actividad 2 para continuar..."
+                              : "Explica por qué consideras importante ese recuerdo..."
+                        }
+                        disabled={currentSegmentIdx === -1 || !editableMemory || editableMemory.trim() === ''}
+                        style={{
+                          width: '100%',
+                          minHeight: '60px',
+                          maxHeight: '80px',
+                          padding: '0.4em',
+                          border: `1px solid ${currentSegmentIdx === -1 || !editableMemory ? '#e2e8f0' : '#cbd5e1'}`,
+                          borderRadius: '4px',
+                          resize: 'vertical',
+                          fontFamily: 'inherit',
+                          fontSize: '14px',
+                          background: currentSegmentIdx === -1 || !editableMemory ? '#f1f5f9' : '#ffffff',
+                          color: currentSegmentIdx === -1 || !editableMemory ? '#94a3b8' : '#000',
+                          cursor: currentSegmentIdx === -1 || !editableMemory ? 'not-allowed' : 'text',
+                          boxSizing: 'border-box'
+                        }}
+                      />
+                      {currentSegmentIdx >= 0 && (!editableMemory || editableMemory.trim() === '') && (
+                        <div style={{
+                          marginTop: '0.5rem',
+                          padding: '0.5rem',
+                          background: '#fef3c7',
+                          border: '1px solid #f59e0b',
+                          borderRadius: '4px',
+                          fontSize: '0.85rem',
+                          color: '#92400e'
+                        }}>
+                          ⚠️ Debes completar primero la Actividad 2 (recuerdo) para poder escribir la importancia.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
               
               {/* Actividad 4 - Solo descripción editable */}
