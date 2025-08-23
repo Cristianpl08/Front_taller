@@ -1533,6 +1533,113 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                     📋 Actividad 2
                   </h3>
                   
+                  {/* Mostrar datos de prosody del usuario para referencia */}
+                  {currentSegmentIdx >= 0 && (editableProsody1 || editableProsody2) && (
+                    <div style={{
+                      background: 'rgba(59,130,246,0.05)',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(59,130,246,0.2)',
+                      marginBottom: '1rem'
+                    }}>
+                      <h4 style={{
+                        margin: '0 0 0.75rem 0',
+                        color: '#1e293b',
+                        fontSize: '1rem',
+                        fontWeight: '600'
+                      }}>
+                        📊 Tus respuestas de la Actividad 1:
+                      </h4>
+                      <div style={{
+                        display: 'flex',
+                        gap: '1rem',
+                        flexWrap: 'wrap'
+                      }}>
+                        {editableProsody1 && (
+                          <div style={{
+                            background: 'rgba(255,255,255,0.7)',
+                            padding: '0.75rem',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(156,163,175,0.3)',
+                            flex: '1',
+                            minWidth: '150px'
+                          }}>
+                            <label style={{
+                              display: 'block',
+                              marginBottom: '0.25rem',
+                              fontSize: '0.9rem',
+                              fontWeight: '600',
+                              color: '#374151'
+                            }}>
+                              Emoción:
+                            </label>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              <span style={{
+                                color: getEmotionColor(editableProsody1),
+                                fontSize: '1.2em',
+                                fontWeight: 'bold'
+                              }}>
+                                ●
+                              </span>
+                              <span style={{
+                                fontSize: '0.95rem',
+                                fontWeight: '500',
+                                color: getEmotionColor(editableProsody1)
+                              }}>
+                                {editableProsody1}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {editableProsody2 && (
+                          <div style={{
+                            background: 'rgba(255,255,255,0.7)',
+                            padding: '0.75rem',
+                            borderRadius: '6px',
+                            border: '1px solid rgba(156,163,175,0.3)',
+                            flex: '1',
+                            minWidth: '150px'
+                          }}>
+                            <label style={{
+                              display: 'block',
+                              marginBottom: '0.25rem',
+                              fontSize: '0.9rem',
+                              fontWeight: '600',
+                              color: '#374151'
+                            }}>
+                              Intensidad:
+                            </label>
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}>
+                              <span style={{
+                                color: getEmotionColor(editableProsody2),
+                                fontSize: '1.2em',
+                                fontWeight: 'bold'
+                              }}>
+                                ●
+                              </span>
+                              <span style={{
+                                fontSize: '0.95rem',
+                                fontWeight: '500',
+                                color: getEmotionColor(editableProsody2)
+                              }}>
+                                {editableProsody2}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Pregunta de la Actividad 2 - Solo visible cuando hay segmento activo */}
                   {currentSegmentIdx >= 0 && (
                     <div style={{
@@ -1554,28 +1661,73 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                       
                       {/* Campo de texto editable */}
                       <div style={{
-                        opacity: currentSegmentIdx === -1 ? 0.5 : 1,
-                        pointerEvents: currentSegmentIdx === -1 ? 'none' : 'auto',
+                        opacity: currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2) ? 0.5 : 1,
+                        pointerEvents: currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2) ? 'none' : 'auto',
                         transition: 'opacity 0.3s ease'
                       }}>
+                        {/* Mensaje cuando no hay datos de prosody */}
+                        {currentSegmentIdx >= 0 && !editableProsody1 && !editableProsody2 && (
+                          <div style={{
+                            background: 'rgba(245, 158, 11, 0.1)',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            borderRadius: '6px',
+                            padding: '1rem',
+                            marginBottom: '1rem',
+                            textAlign: 'center'
+                          }}>
+                            <p style={{
+                              margin: '0 0 0.5rem 0',
+                              color: '#92400e',
+                              fontSize: '0.95rem',
+                              fontWeight: '500'
+                            }}>
+                              ⚠️ Debes completar la Actividad 1 primero
+                            </p>
+                            <p style={{
+                              margin: '0',
+                              color: '#a16207',
+                              fontSize: '0.85rem',
+                              lineHeight: '1.4'
+                            }}>
+                              Para continuar con esta actividad, necesitas seleccionar una emoción e intensidad en la Actividad 1 para este segmento.
+                            </p>
+                          </div>
+                        )}
+                        
                         <textarea
                           value={editableMemory}
                           onChange={(e) => setEditableMemory(e.target.value)}
                           onBlur={() => handleFieldBlur('memory', editableMemory)}
-                          placeholder="Escribe aquí tu recuerdo..."
-                          disabled={currentSegmentIdx === -1}
+                          placeholder={
+                            currentSegmentIdx === -1 
+                              ? "Selecciona un segmento para continuar..." 
+                              : (!editableProsody1 && !editableProsody2)
+                                ? "Completa la Actividad 1 para este segmento..."
+                                : "Escribe aquí tu recuerdo..."
+                          }
+                          disabled={currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2)}
                           style={{
                             width: '100%',
                             minHeight: '80px',
                             padding: '0.75rem',
-                            border: `1px solid ${currentSegmentIdx === -1 ? '#e2e8f0' : '#cbd5e1'}`,
+                            border: `1px solid ${
+                              currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2) 
+                                ? '#e2e8f0' 
+                                : '#cbd5e1'
+                            }`,
                             borderRadius: '6px',
                             resize: 'vertical',
                             fontFamily: 'inherit',
                             fontSize: '14px',
-                            background: currentSegmentIdx === -1 ? '#f1f5f9' : '#ffffff',
-                            color: currentSegmentIdx === -1 ? '#94a3b8' : '#374151',
-                            cursor: currentSegmentIdx === -1 ? 'not-allowed' : 'text',
+                            background: currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2) 
+                              ? '#f1f5f9' 
+                              : '#ffffff',
+                            color: currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2) 
+                              ? '#94a3b8' 
+                              : '#374151',
+                            cursor: currentSegmentIdx === -1 || (!editableProsody1 && !editableProsody2) 
+                              ? 'not-allowed' 
+                              : 'text',
                             boxSizing: 'border-box',
                             lineHeight: '1.5'
                           }}
