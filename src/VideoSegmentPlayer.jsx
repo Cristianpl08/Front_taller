@@ -13,8 +13,13 @@ import { apiService } from './services/api.js';
 function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectData, selectedActivity = 'actividad1' }) {
   const videoRef = useRef(null);
   const audioRef = useRef(null);
+  // Separate wavesurfer instances for original and final audio
+  const originalWavesurferRef = useRef(null);
+  const finalWavesurferRef = useRef(null);
+  // Active wavesurfer ref (points to either original or final based on activity)
   const wavesurferRef = useRef(null);
-  const [audioUrl, setAudioUrl] = useState(null);
+  const [originalAudioUrl, setOriginalAudioUrl] = useState(null);
+  const [finalAudioUrl, setFinalAudioUrl] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
   const [currentSegmentIdx, setCurrentSegmentIdx] = useState(-1);
   const [waveLoading, setWaveLoading] = useState(false);
@@ -286,45 +291,73 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   useEffect(() => {
     if (projectData) {
       console.log("🎬 Cargando proyecto:", projectData);
+      setWaveLoading(true); // Start loading as soon as we have project data
+      setIsFullyLoaded(false); // Reset fully loaded state
       
       // Procesar URL del video
       let processedVideoUrl = projectData.video;
-      let processedAudioUrl = null;
+      let processedOriginalAudioUrl = null;
+      let processedFinalAudioUrl = null;
 
-      // Priorizar audiofinal si está disponible, sino usar el audio del video
+      // Obtener el audio original y final
+      if (projectData.audio) {
+        console.log("🎵 Usando audio original del proyecto:", projectData.audio);
+        processedOriginalAudioUrl = projectData.audio;
+      } else if (projectData.video) {
+        console.log("🎵 Generando audio original desde el video:", projectData.video);
+        if (isCloudinaryUrl(projectData.video)) {
+          processedOriginalAudioUrl = generateAudioUrl(projectData.video);
+        } else {
+          processedOriginalAudioUrl = projectData.video;
+        }
+      }
+
+      // Obtener audio final si está disponible
       if (projectData.audiofinal) {
         console.log("🎵 Usando audiofinal del proyecto:", projectData.audiofinal);
-        processedAudioUrl = projectData.audiofinal;
-      } else if (projectData.audio) {
-        console.log("🎵 Usando audio del proyecto:", projectData.audio);
-        processedAudioUrl = projectData.audio;
-      } else if (projectData.video) {
-        console.log("🎵 Generando audio desde el video:", projectData.video);
-        if (isCloudinaryUrl(projectData.video)) {
-          processedAudioUrl = generateAudioUrl(projectData.video);
-        } else {
-          processedAudioUrl = projectData.video;
-        }
+        processedFinalAudioUrl = projectData.audiofinal;
+      } else {
+        // Si no hay audio final, usar el audio original como fallback
+        processedFinalAudioUrl = processedOriginalAudioUrl;
       }
 
       if (isCloudinaryUrl(projectData.video)) {
         console.log("☁️ Detectada URL de Cloudinary, procesando...");
         processedVideoUrl = processCloudinaryUrl(projectData.video);
-        console.log("✅ URLs procesadas para Cloudinary:", { video: processedVideoUrl, audio: processedAudioUrl });
+        console.log("✅ URLs procesadas para Cloudinary:", { 
+          video: processedVideoUrl, 
+          originalAudio: processedOriginalAudioUrl,
+          finalAudio: processedFinalAudioUrl 
+        });
       } else {
         console.log("🔗 URL directa detectada:", projectData.video);
       }
       
+      // If both original and final wavesurfer are already initialized, destroy them
+      if (originalWavesurferRef.current) {
+        console.log("Destruyendo WaveSurfer original para recargar...");
+        originalWavesurferRef.current.destroy();
+        originalWavesurferRef.current = null;
+      }
+      
+      if (finalWavesurferRef.current) {
+        console.log("Destruyendo WaveSurfer final para recargar...");
+        finalWavesurferRef.current.destroy();
+        finalWavesurferRef.current = null;
+      }
+      
+      wavesurferRef.current = null;
+      
       setVideoUrl(processedVideoUrl);
-      setAudioUrl(processedAudioUrl);
-      setWaveLoading(true);
+      setOriginalAudioUrl(processedOriginalAudioUrl);
+      setFinalAudioUrl(processedFinalAudioUrl);
     }
   }, [projectData]);
 
   // Función para sincronización completa entre video y WaveSurfer
   const syncAllMedia = (targetTime, source = 'video') => {
     try {
-      if (!videoRef.current || !wavesurferRef.current) return;
+      if (!videoRef.current || (!originalWavesurferRef.current && !finalWavesurferRef.current)) return;
       
       const video = videoRef.current;
       
@@ -343,20 +376,24 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
           // Actualizar el tiempo sincronizado
           setCurrentTime(targetTime);
           setSynchronizedTime(targetTime);
-          // Sincronizar WaveSurfer después de un pequeño delay para evitar conflictos
+          // Sincronizar ambos WaveSurfer después de un pequeño delay para evitar conflictos
           setTimeout(() => {
-            if (wavesurferRef.current && video.duration) {
+            if (originalWavesurferRef.current && finalWavesurferRef.current && video.duration) {
               const progress = targetTime / video.duration;
-              wavesurferRef.current.seekTo(progress);
+              originalWavesurferRef.current.seekTo(progress);
+              finalWavesurferRef.current.seekTo(progress);
             }
           }, 50);
         }
       } else {
-        // Si el cambio viene del video, sincronizar WaveSurfer
+        // Si el cambio viene del video, sincronizar ambos WaveSurfer
         if (video.duration) {
           const progress = targetTime / video.duration;
-          if (wavesurferRef.current) {
-            wavesurferRef.current.seekTo(progress);
+          if (originalWavesurferRef.current) {
+            originalWavesurferRef.current.seekTo(progress);
+          }
+          if (finalWavesurferRef.current) {
+            finalWavesurferRef.current.seekTo(progress);
           }
           // Actualizar el tiempo sincronizado
           setCurrentTime(targetTime);
@@ -398,13 +435,21 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
   // Sincronización principal entre video y WaveSurfer
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !wavesurferRef.current) return;
+    if (!video || (!originalWavesurferRef.current && !finalWavesurferRef.current)) return;
 
     const handleTimeUpdate = () => {
       if (!isUserSeeking && video.duration) {
         try {
           const progress = video.currentTime / video.duration;
-          wavesurferRef.current.seekTo(progress);
+          
+          // Update both wavesurfers
+          if (originalWavesurferRef.current) {
+            originalWavesurferRef.current.seekTo(progress);
+          }
+          
+          if (finalWavesurferRef.current) {
+            finalWavesurferRef.current.seekTo(progress);
+          }
           
           // Actualizar el tiempo sincronizado
           setCurrentTime(video.currentTime);
@@ -424,7 +469,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     const handlePlay = () => {
       try {
         setIsPlaying(true);
-        // Solo sincronizar WaveSurfer, no el audioRef separado
+        // Play the active wavesurfer
         if (wavesurferRef.current && !wavesurferRef.current.isPlaying()) {
           wavesurferRef.current.play();
         }
@@ -436,9 +481,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     const handlePause = () => {
       try {
         setIsPlaying(false);
-        // Solo pausar WaveSurfer, no el audioRef separado
-        if (wavesurferRef.current && wavesurferRef.current.isPlaying()) {
-          wavesurferRef.current.pause();
+        // Pause both wavesurfers
+        if (originalWavesurferRef.current && originalWavesurferRef.current.isPlaying()) {
+          originalWavesurferRef.current.pause();
+        }
+        if (finalWavesurferRef.current && finalWavesurferRef.current.isPlaying()) {
+          finalWavesurferRef.current.pause();
         }
       } catch (error) {
         console.warn('Error pausando reproducción:', error);
@@ -448,7 +496,15 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     const handleSeeked = () => {
       try {
         const progress = video.currentTime / video.duration;
-        wavesurferRef.current.seekTo(progress);
+        
+        // Update both wavesurfers
+        if (originalWavesurferRef.current) {
+          originalWavesurferRef.current.seekTo(progress);
+        }
+        if (finalWavesurferRef.current) {
+          finalWavesurferRef.current.seekTo(progress);
+        }
+        
         setCurrentTime(video.currentTime);
         setSynchronizedTime(video.currentTime);
       } catch (error) {
@@ -473,7 +529,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       video.removeEventListener('seeked', handleSeeked);
       video.removeEventListener('ended', handleEnded);
     };
-  }, [isUserSeeking, segments, projectData?.audiofinal]);
+  }, [isUserSeeking, segments, selectedActivity]);
 
   // Sincronizar estado inicial del botón play/pause
   useEffect(() => {
@@ -493,7 +549,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       // Obtener el tiempo del video
       const videoTime = video.currentTime || 0;
       
-      // Obtener el tiempo de WaveSurfer si está disponible
+      // Obtener el tiempo del WaveSurfer activo si está disponible
       let wavesurferTime = 0;
       if (wavesurferRef.current && video.duration) {
         try {
@@ -550,75 +606,177 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     return `${minutes}:${seconds.padStart(4, '0')}`;
   };
 
+  // Effect to update the active wavesurfer based on selected activity
+  useEffect(() => {
+    console.log("Selected activity changed to:", selectedActivity);
+    
+    // Track if we're switching to/from activity 4 (which uses original audio)
+    const wasActivity4 = wavesurferRef.current === originalWavesurferRef.current;
+    const isNowActivity4 = selectedActivity === 'actividad4';
+    const switchingAudioSource = wasActivity4 !== isNowActivity4;
+    
+    // Only update the wavesurfer reference if we're switching to/from activity 4
+    if (switchingAudioSource) {
+      if (isNowActivity4) {
+        console.log("Switching to original audio wavesurfer for activity 4");
+        wavesurferRef.current = originalWavesurferRef.current;
+      } else {
+        console.log("Switching to final audio wavesurfer for activity", selectedActivity);
+        wavesurferRef.current = finalWavesurferRef.current;
+      }
+      
+      // If the wavesurfers are initialized, handle the audio switch properly
+      if (originalWavesurferRef.current && finalWavesurferRef.current) {
+        const wasPlaying = isPlaying;
+        
+        // Pause both wavesurfers
+        originalWavesurferRef.current.pause();
+        finalWavesurferRef.current.pause();
+        
+        // If video was playing, resume with the active wavesurfer
+        if (wasPlaying && videoRef.current && wavesurferRef.current) {
+          // Synchronize the active wavesurfer with the current video time
+          const currentTime = videoRef.current.currentTime;
+          const duration = videoRef.current.duration || 1;
+          const progress = currentTime / duration;
+          
+          wavesurferRef.current.seekTo(progress);
+          wavesurferRef.current.play();
+          videoRef.current.play();
+        }
+      }
+      
+      // Update visibility when switching audio sources
+      updateWavesurferVisibility();
+    } else {
+      console.log("No wavesurfer change needed, both activities use the same audio source");
+    }
+  }, [selectedActivity, isPlaying]);
+
   // useEffect principal para inicializar WaveSurfer
   useEffect(() => {
-    console.log("useEffect audioUrl triggered, audioUrl:", audioUrl);
+    console.log("useEffect for WaveSurfer initialization triggered");
+    console.log("originalAudioUrl:", originalAudioUrl);
+    console.log("finalAudioUrl:", finalAudioUrl);
     console.log("projectData:", projectData);
-    console.log("wavesurferRef.current:", wavesurferRef.current);
     
-    if (audioUrl && projectData && !wavesurferRef.current) {
-      console.log("Iniciando creación de WaveSurfer...");
+    if (originalAudioUrl && finalAudioUrl && projectData && 
+        !originalWavesurferRef.current && !finalWavesurferRef.current) {
+      console.log("Iniciando creación de ambos WaveSurfer...");
       
-      // Función para inicializar WaveSurfer con retraso para asegurar que el DOM esté listo
-      const initializeWaveSurfer = () => {
-        // Verificar que el contenedor existe
-        const container = document.getElementById("waveform");
-        console.log("Contenedor waveform encontrado:", container);
+      // Función para inicializar ambos WaveSurfer con retraso
+      const initializeWaveSurfers = () => {
+        // Verificar que los contenedores existen
+        const originalContainer = document.getElementById("original-waveform");
+        const finalContainer = document.getElementById("final-waveform");
+        const timelineContainer = document.getElementById("timeline");
         
-        if (!container) {
-          console.error("No se encontró el contenedor #waveform, reintentando en 100ms...");
-          setTimeout(initializeWaveSurfer, 100);
+        console.log("Contenedores encontrados:", { 
+          originalWaveform: originalContainer,
+          finalWaveform: finalContainer,
+          timeline: timelineContainer
+        });
+        
+        if (!originalContainer || !finalContainer || !timelineContainer) {
+          console.error("No se encontraron todos los contenedores, reintentando en 100ms...");
+          setTimeout(initializeWaveSurfers, 100);
           return;
         }
 
-        const regionsPlugin = RegionsPlugin.create();
-        const timelinePlugin = TimelinePlugin.create();
+        // Create plugins for original wavesurfer
+        const originalRegionsPlugin = RegionsPlugin.create();
+        const originalTimelinePlugin = TimelinePlugin.create();
         
-        console.log("Plugins creados:", { regionsPlugin, timelinePlugin });
+        // Create plugins for final wavesurfer
+        const finalRegionsPlugin = RegionsPlugin.create();
+        const finalTimelinePlugin = TimelinePlugin.create();
+        
+        console.log("Plugins creados para ambos wavesurfers");
         
         try {
-          wavesurferRef.current = WaveSurfer.create({
-            container: "#waveform",
+          // Create original wavesurfer
+          originalWavesurferRef.current = WaveSurfer.create({
+            container: "#original-waveform",
             waveColor: "#8B7355",
             progressColor: "#FF8C00",
             height: 80,
             responsive: true,
             backend: "MediaElement",
-            plugins: [regionsPlugin, timelinePlugin],
+            plugins: [originalRegionsPlugin, originalTimelinePlugin],
             timeline: {
               container: "#timeline"
             },
             minPxPerSec: 100 * zoomLevel
           });
           
-          console.log("WaveSurfer creado exitosamente:", wavesurferRef.current);
+          // Create final wavesurfer
+          finalWavesurferRef.current = WaveSurfer.create({
+            container: "#final-waveform",
+            waveColor: "#8B7355",
+            progressColor: "#FF8C00",
+            height: 80,
+            responsive: true,
+            backend: "MediaElement",
+            plugins: [finalRegionsPlugin, finalTimelinePlugin],
+            timeline: {
+              container: "#timeline"
+            },
+            minPxPerSec: 100 * zoomLevel
+          });
+          
+          console.log("Ambos WaveSurfer creados exitosamente");
+          
+          // Set initial active wavesurfer based on selected activity
+          if (selectedActivity === 'actividad4') {
+            wavesurferRef.current = originalWavesurferRef.current;
+          } else {
+            wavesurferRef.current = finalWavesurferRef.current;
+          }
+          
+          console.log("WaveSurfer activo inicial establecido a:", 
+                    selectedActivity === 'actividad4' ? "original" : "final");
+                    
+          // Set initial display state of containers
+          const originalWaveformContainer = document.getElementById("original-waveform");
+          const finalWaveformContainer = document.getElementById("final-waveform");
+          
+          if (originalWaveformContainer && finalWaveformContainer) {
+            if (selectedActivity === 'actividad4') {
+              originalWaveformContainer.style.display = 'block';
+              finalWaveformContainer.style.display = 'none';
+            } else {
+              originalWaveformContainer.style.display = 'none';
+              finalWaveformContainer.style.display = 'block';
+            }
+            console.log("Initial waveform visibility set based on activity:", selectedActivity);
+          }
         } catch (error) {
           console.error("Error al crear WaveSurfer:", error);
           return;
         }
 
-        console.log("Cargando audio URL:", audioUrl);
-        // Siempre cargar el audio directamente en WaveSurfer, no usar el elemento audioRef
-        // para evitar duplicación de audio
-        wavesurferRef.current.load(audioUrl);
+        console.log("Cargando URLs de audio:", { 
+          original: originalAudioUrl, 
+          final: finalAudioUrl 
+        });
+        
+        // Load audio into both wavesurfers
+        originalWavesurferRef.current.load(originalAudioUrl);
+        finalWavesurferRef.current.load(finalAudioUrl);
         setWaveLoading(true);
 
-        wavesurferRef.current.on('ready', () => {
-          console.log("WaveSurfer está listo!");
+        // Configure event handlers for original wavesurfer
+        originalWavesurferRef.current.on('ready', () => {
+          console.log("Original WaveSurfer está listo!");
           
-          // Verificar que el plugin de timeline esté disponible
-          console.log("Plugin timeline disponible:", timelinePlugin);
-          console.log("Plugins de WaveSurfer:", wavesurferRef.current.plugins);
-          
-          // Verificar que el plugin de regiones esté disponible
-          if (regionsPlugin && segments.length > 0) {
-            console.log("🎯 Agregando regiones automáticamente desde los segmentos cargados...");
-            regionsPlugin.clearRegions();
+          // Add regions to original wavesurfer
+          if (originalRegionsPlugin && segments.length > 0) {
+            console.log("Agregando regiones al wavesurfer original...");
+            originalRegionsPlugin.clearRegions();
             segments.forEach((seg, idx) => {
-              // Convertir de milisegundos a segundos para WaveSurfer
               const startInSeconds = seg.start / 1000;
               const endInSeconds = seg.end / 1000;
-              regionsPlugin.addRegion({
+              originalRegionsPlugin.addRegion({
                 id: String(seg.id),
                 start: startInSeconds,
                 end: endInSeconds,
@@ -627,110 +785,252 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                 resize: false,
               });
             });
-            console.log("✅ Regiones agregadas automáticamente:", segments.length);
-          } else {
-            console.log("⚠️ No hay segmentos disponibles para generar regiones");
           }
           
-          setWaveLoading(false);
-          setIsFullyLoaded(true);
-          console.log("🎉 ¡Todo cargado exitosamente! Video y wave surfer listos para usar.");
+          // Explicitly mark the original wavesurfer as ready
+          originalReady = true;
+          console.log("Original WaveSurfer marked ready by event");
+          checkBothWavesurfersReady();
+        });
+
+        originalWavesurferRef.current.on('error', (error) => {
+          console.error("Error en Original WaveSurfer:", error);
+          // Even on error, consider it ready so we can continue
+          originalReady = true;
+          checkBothWavesurfersReady();
+        });
+
+        // Configure event handlers for final wavesurfer
+        finalWavesurferRef.current.on('ready', () => {
+          console.log("Final WaveSurfer está listo!");
           
-          // Mostrar notificación de éxito
-          if (projectData) {
-            console.log(`✅ Proyecto "${projectData.name || 'Sin nombre'}" cargado con ${segments.length} segmentos`);
+          // Add regions to final wavesurfer
+          if (finalRegionsPlugin && segments.length > 0) {
+            console.log("Agregando regiones al wavesurfer final...");
+            finalRegionsPlugin.clearRegions();
+            segments.forEach((seg, idx) => {
+              const startInSeconds = seg.start / 1000;
+              const endInSeconds = seg.end / 1000;
+              finalRegionsPlugin.addRegion({
+                id: String(seg.id),
+                start: startInSeconds,
+                end: endInSeconds,
+                color: idx === currentSegmentIdx ? 'rgba(124,58,237,0.3)' : 'rgba(96,165,250,0.2)',
+                drag: false,
+                resize: false,
+              });
+            });
           }
+          
+          // Explicitly mark the final wavesurfer as ready
+          finalReady = true;
+          console.log("Final WaveSurfer marked ready by event");
+          checkBothWavesurfersReady();
         });
 
-        wavesurferRef.current.on('error', (error) => {
-          console.error("Error en WaveSurfer:", error);
-          setWaveLoading(false);
+        finalWavesurferRef.current.on('error', (error) => {
+          console.error("Error en Final WaveSurfer:", error);
+          // Even on error, consider it ready so we can continue
+          finalReady = true;
+          checkBothWavesurfersReady();
         });
 
-        wavesurferRef.current.on('loading', (progress) => {
-          console.log("Cargando WaveSurfer:", progress * 100 + "%");
-        });
-
-        // Evento cuando el usuario hace clic en una región
-        regionsPlugin.on('region-clicked', (region, e) => {
-          console.log("Región clickeada:", region.id);
-          e.stopPropagation();
-          const segmentId = Number(region.id);
-          const segment = segments.find(seg => seg.id === segmentId);
-          if (segment) {
-            setIsUserSeeking(true);
-            const startTimeInSeconds = segment.start / 1000;
-            
-            // Usar la función de sincronización completa
-            syncAllMedia(startTimeInSeconds, 'region');
-            
-            setCurrentSegmentIdx(segments.findIndex(seg => seg.id === segmentId));
-            setTimeout(() => setIsUserSeeking(false), 200);
+        // Helper function to check if both wavesurfers are ready
+        let originalReady = false;
+        let finalReady = false;
+        
+        function checkBothWavesurfersReady() {
+          console.log("Checking if both wavesurfers are ready...");
+          console.log("Original WaveSurfer ready state:", originalReady);
+          console.log("Final WaveSurfer ready state:", finalReady);
+          
+          // For Original WaveSurfer
+          if (!originalReady && originalWavesurferRef.current) {
+            originalReady = true;
+            console.log("Original WaveSurfer marked as ready");
           }
-        });
-
-        // Evento cuando el usuario hace clic en el WaveSurfer
-        wavesurferRef.current.on('seek', (progress) => {
-          if (!isUserSeeking) {
-            setIsUserSeeking(true);
+          
+          // For Final WaveSurfer
+          if (!finalReady && finalWavesurferRef.current) {
+            finalReady = true;
+            console.log("Final WaveSurfer marked as ready");
+          }
+          
+          if (originalReady && finalReady) {
+            console.log("¡Ambos WaveSurfer están listos!");
+            setWaveLoading(false);
+            setIsFullyLoaded(true);
             
-            // Usar la función de sincronización completa
-            if (videoRef.current && videoRef.current.duration) {
-              const targetTime = progress * videoRef.current.duration;
-              syncAllMedia(targetTime, 'wavesurfer');
+            // Configure visibility based on selected activity
+            updateWavesurferVisibility();
+            
+            // Setup event handlers for both wavesurfers
+            setupWavesurferEventHandlers(originalWavesurferRef.current, originalRegionsPlugin);
+            setupWavesurferEventHandlers(finalWavesurferRef.current, finalRegionsPlugin);
+            
+            console.log("🎉 ¡Todo cargado exitosamente! Video y ambos wave surfers listos para usar.");
+          }
+        }
+        
+        // Function to setup event handlers for wavesurfer instances
+        function setupWavesurferEventHandlers(wavesurfer, regionsPlugin) {
+          // Evento cuando el usuario hace clic en una región
+          regionsPlugin.on('region-clicked', (region, e) => {
+            console.log("Región clickeada:", region.id);
+            e.stopPropagation();
+            const segmentId = Number(region.id);
+            const segment = segments.find(seg => seg.id === segmentId);
+            if (segment) {
+              setIsUserSeeking(true);
+              const startTimeInSeconds = segment.start / 1000;
+              
+              // Usar la función de sincronización completa
+              syncAllMedia(startTimeInSeconds, 'region');
+              
+              setCurrentSegmentIdx(segments.findIndex(seg => seg.id === segmentId));
+              setTimeout(() => setIsUserSeeking(false), 200);
             }
-            
-            // Obtener el tiempo actual del video después del seek
-            const video = videoRef.current;
-            let currentTime = 0;
-            if (video && video.duration) {
-              currentTime = progress * video.duration;
-            }
-            // Buscar el segmento correspondiente (convertir a milisegundos para comparar)
-            const currentTimeMs = currentTime * 1000;
-            const idx = segments.findIndex(seg => currentTimeMs >= seg.start && currentTimeMs <= seg.end);
-            setCurrentSegmentIdx(idx !== -1 ? idx : -1);
-            
-            // Actualizar el tiempo sincronizado inmediatamente
-            setCurrentTime(currentTime);
-            setSynchronizedTime(currentTime);
-            
-            setTimeout(() => setIsUserSeeking(false), 200);
-          }
-        });
+          });
 
-        // Evento adicional para sincronización en tiempo real de WaveSurfer
-        wavesurferRef.current.on('audioprocess', (time) => {
-          if (!isUserSeeking) {
-            // Convertir tiempo a milisegundos para comparar con los segmentos
-            const timeMs = time * 1000;
-            const idx = segments.findIndex(seg => timeMs >= seg.start && timeMs <= seg.end);
-            if (idx !== -1 && idx !== currentSegmentIdx) {
-              setCurrentSegmentIdx(idx);
-            } else if (idx === -1 && currentSegmentIdx !== -1) {
-              // Si no estamos en ningún segmento, limpiar la selección
-              setCurrentSegmentIdx(-1);
+          // Evento cuando el usuario hace clic en el WaveSurfer
+          wavesurfer.on('seek', (progress) => {
+            if (!isUserSeeking) {
+              setIsUserSeeking(true);
+              
+              // Usar la función de sincronización completa
+              if (videoRef.current && videoRef.current.duration) {
+                const targetTime = progress * videoRef.current.duration;
+                syncAllMedia(targetTime, 'wavesurfer');
+              }
+              
+              // Obtener el tiempo actual del video después del seek
+              const video = videoRef.current;
+              let currentTime = 0;
+              if (video && video.duration) {
+                currentTime = progress * video.duration;
+              }
+              // Buscar el segmento correspondiente (convertir a milisegundos para comparar)
+              const currentTimeMs = currentTime * 1000;
+              const idx = segments.findIndex(seg => currentTimeMs >= seg.start && currentTimeMs <= seg.end);
+              setCurrentSegmentIdx(idx !== -1 ? idx : -1);
+              
+              // Actualizar el tiempo sincronizado inmediatamente
+              setCurrentTime(currentTime);
+              setSynchronizedTime(currentTime);
+              
+              setTimeout(() => setIsUserSeeking(false), 200);
             }
-            
-            // Actualizar el tiempo sincronizado desde WaveSurfer
-            setCurrentTime(time);
-            setSynchronizedTime(time);
-          }
-        });
+          });
+
+          // Evento adicional para sincronización en tiempo real de WaveSurfer
+          wavesurfer.on('audioprocess', (time) => {
+            if (!isUserSeeking) {
+              // Convertir tiempo a milisegundos para comparar con los segmentos
+              const timeMs = time * 1000;
+              const idx = segments.findIndex(seg => timeMs >= seg.start && timeMs <= seg.end);
+              if (idx !== -1 && idx !== currentSegmentIdx) {
+                setCurrentSegmentIdx(idx);
+              } else if (idx === -1 && currentSegmentIdx !== -1) {
+                // Si no estamos en ningún segmento, limpiar la selección
+                setCurrentSegmentIdx(-1);
+              }
+              
+              // Actualizar el tiempo sincronizado desde WaveSurfer
+              setCurrentTime(time);
+              setSynchronizedTime(time);
+            }
+          });
+        }
       };
       
-      // Inicializar WaveSurfer
-      initializeWaveSurfer();
+      // Inicializar WaveSurfers
+      initializeWaveSurfers();
     }
 
     return () => {
-      if (wavesurferRef.current) {
-        console.log("Destruyendo WaveSurfer...");
-        wavesurferRef.current.destroy();
-        wavesurferRef.current = null;
+      if (originalWavesurferRef.current) {
+        console.log("Destruyendo WaveSurfer original...");
+        try {
+          originalWavesurferRef.current.destroy();
+        } catch (error) {
+          console.error("Error al destruir WaveSurfer original:", error);
+        }
+        originalWavesurferRef.current = null;
       }
+      
+      if (finalWavesurferRef.current) {
+        console.log("Destruyendo WaveSurfer final...");
+        try {
+          finalWavesurferRef.current.destroy();
+        } catch (error) {
+          console.error("Error al destruir WaveSurfer final:", error);
+        }
+        finalWavesurferRef.current = null;
+      }
+      
+      wavesurferRef.current = null;
+      
+      // Reset loading states
+      setWaveLoading(false);
+      setIsFullyLoaded(false);
     };
-  }, [audioUrl, projectData]);
+  }, [originalAudioUrl, finalAudioUrl, projectData, segments, zoomLevel, selectedActivity]);
+  
+  // Function to update wavesurfer visibility based on selected activity
+  const updateWavesurferVisibility = () => {
+    console.log("Updating wavesurfer visibility for activity:", selectedActivity);
+    
+    const originalWaveformContainer = document.getElementById("original-waveform");
+    const finalWaveformContainer = document.getElementById("final-waveform");
+    
+    if (!originalWaveformContainer || !finalWaveformContainer) {
+      console.warn("One or both waveform containers not found in DOM");
+      return;
+    }
+    
+    // Check if visibility already matches what it should be
+    const isOriginalVisible = originalWaveformContainer.style.display === 'block';
+    const shouldShowOriginal = selectedActivity === 'actividad4';
+    
+    if (isOriginalVisible === shouldShowOriginal) {
+      console.log("Waveform visibility already correct, no change needed");
+      return;
+    }
+    
+    if (shouldShowOriginal) {
+      // Show original, hide final
+      console.log("Showing original audio waveform for actividad4");
+      originalWaveformContainer.style.display = 'block';
+      finalWaveformContainer.style.display = 'none';
+    } else {
+      // Show final, hide original
+      console.log("Showing final audio waveform for activity:", selectedActivity);
+      originalWaveformContainer.style.display = 'none';
+      finalWaveformContainer.style.display = 'block';
+    }
+  };
+  
+  // Store previous activity state
+  const previousActivityRef = useRef(null);
+  
+  // Update visibility only when switching to/from actividad4 or when component loads
+  useEffect(() => {
+    // Track if we're switching to/from activity 4 (which requires different visibility)
+    const isActivity4 = selectedActivity === 'actividad4';
+    const previousWasActivity4 = previousActivityRef.current === 'actividad4';
+    const switchingAudioSource = isActivity4 !== previousWasActivity4;
+    
+    if (switchingAudioSource || isFullyLoaded) {
+      console.log("Activity switch between audio sources or component loaded, updating visibility:", 
+                  { current: selectedActivity, previous: previousActivityRef.current });
+      updateWavesurferVisibility();
+    } else {
+      console.log("Activity change doesn't affect audio source, skipping visibility update");
+    }
+    
+    // Store current activity for next comparison
+    previousActivityRef.current = selectedActivity;
+  }, [selectedActivity, isFullyLoaded]);
 
   const handleVideoUpload = (e) => {
     const file = e.target.files[0];
@@ -739,7 +1039,8 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
       const url = URL.createObjectURL(file);
       console.log("URL creada:", url);
       setVideoUrl(url);
-      setAudioUrl(url);
+      setOriginalAudioUrl(url);
+      setFinalAudioUrl(url);
       setWaveLoading(true);
     }
   };
@@ -1091,11 +1392,22 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
     }
   };
 
+  // Log the loading status to help with debugging
+  console.log("Component render state:", {
+    waveLoading,
+    isFullyLoaded,
+    originalAudioUrl,
+    finalAudioUrl,
+    originalWavesurferReady: originalWavesurferRef.current ? "yes" : "no",
+    finalWavesurferReady: finalWavesurferRef.current ? "yes" : "no",
+    activeWavesurferReady: wavesurferRef.current ? "yes" : "no"
+  });
+
   return (
     <div className="vsp-bg" style={{ 
       padding: '20px'
     }}>
-      {waveLoading && (
+      {(waveLoading || !isFullyLoaded) && originalAudioUrl && finalAudioUrl && (
         <div className="vsp-loading-overlay">
           <div style={{
             background: 'rgba(255, 255, 255, 0.95)',
@@ -1116,6 +1428,12 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                   🎵 {projectData.audiofinal ? 'Usando audio final del proyecto' : 'Generando onda de audio desde video'}...
                 </p>
                 <p style={{ margin: '0.5rem 0' }}>🎯 Configurando {segments.length} segmentos...</p>
+                
+                <div style={{ marginTop: '1rem', fontSize: '0.8rem', color: '#94a3b8', textAlign: 'left' }}>
+                  <p>Original WaveSurfer: {originalWavesurferRef.current ? "✅" : "⏳"}</p>
+                  <p>Final WaveSurfer: {finalWavesurferRef.current ? "✅" : "⏳"}</p>
+                  <p>Fully Loaded: {isFullyLoaded ? "✅" : "⏳"}</p>
+                </div>
               </div>
             )}
           </div>
@@ -1928,7 +2246,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           fontWeight: 'bold',
                           color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                         }}>
-                          Prosody 3:
+                          Emoción:
                           {editableProsody3 && (
                             <span style={{
                               marginLeft: '0.5em',
@@ -2008,7 +2326,7 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
                           fontWeight: 'bold',
                           color: currentSegmentIdx === -1 ? '#94a3b8' : '#1e293b'
                         }}>
-                          Prosody 4:
+                          Intensidad:
                           {editableProsody4 && (
                             <span style={{
                               marginLeft: '0.5em',
@@ -2105,9 +2423,30 @@ function VideoSegmentPlayer({ hideUpload, segments: propSegments = [], projectDa
               )}
             </div>
             
-            <div id="waveform" className="vsp-waveform" />
+            {/* Audio waveform containers */}
+            <div style={{ position: 'relative', marginBottom: '8px' }}>
+              {/* Original audio waveform - initial state will be set by updateWavesurferVisibility */}
+              <div 
+                id="original-waveform" 
+                className="vsp-waveform" 
+                style={{ 
+                  // Don't set display with inline style, let updateWavesurferVisibility handle it
+                  minHeight: '80px' 
+                }} 
+              />
+              
+              {/* Final audio waveform - initial state will be set by updateWavesurferVisibility */}
+              <div 
+                id="final-waveform" 
+                className="vsp-waveform" 
+                style={{ 
+                  // Don't set display with inline style, let updateWavesurferVisibility handle it
+                  minHeight: '80px'
+                }} 
+              />
+            </div>
             
-            <div id="timeline" className="vsp-timeline" />
+            <div id="timeline" className="vsp-timeline" style={{ minHeight: '30px' }} />
             
             {/* Controles debajo del timeline */}
             <div className="vsp-controls-container" style={{

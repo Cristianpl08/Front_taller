@@ -17,6 +17,7 @@ function App() {
   const [currentView, setCurrentView] = useState('player'); // 'projects', 'detail', 'player'
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState('actividad1'); // Estado para la actividad seleccionada
+  const [lastSelectedActivity, setLastSelectedActivity] = useState('actividad1'); // Estado para la última actividad real seleccionada
 
   // Verificar autenticación al cargar la aplicación
   useEffect(() => {
@@ -203,7 +204,16 @@ function App() {
                 {/* Menú hamburguesa */}
                 <div style={{ position: 'relative' }}>
                   <button
-                    onClick={() => setSelectedActivity(prev => prev === 'menu-open' ? 'actividad1' : 'menu-open')}
+                    onClick={() => {
+                      // If menu is open, close it and restore the last selected activity
+                      // If menu is closed, open it and remember the current activity
+                      if (selectedActivity === 'menu-open') {
+                        setSelectedActivity(lastSelectedActivity);
+                      } else {
+                        setLastSelectedActivity(selectedActivity); // Remember current activity
+                        setSelectedActivity('menu-open');
+                      }
+                    }}
                     style={{
                       background: 'rgba(255,255,255,0.2)',
                       border: '1px solid rgba(255,255,255,0.3)',
@@ -239,61 +249,77 @@ function App() {
                       marginTop: '0.5rem'
                     }}>
                       <div
-                        onClick={() => setSelectedActivity('actividad1')}
+                        onClick={() => {
+                          // Set the activity directly instead of setting menu-open
+                          setSelectedActivity('actividad1'); // This will close the menu and set the activity
+                          setLastSelectedActivity('actividad1');
+                        }}
                         style={{
                           padding: '0.75rem 1rem',
                           cursor: 'pointer',
                           borderBottom: '1px solid #f1f5f9',
-                          background: selectedActivity === 'actividad1' ? '#fef3c7' : 'transparent',
-                          color: selectedActivity === 'actividad1' ? '#92400e' : '#374151',
-                          fontWeight: selectedActivity === 'actividad1' ? '600' : '400'
+                          background: lastSelectedActivity === 'actividad1' ? '#fef3c7' : 'transparent',
+                          color: lastSelectedActivity === 'actividad1' ? '#92400e' : '#374151',
+                          fontWeight: lastSelectedActivity === 'actividad1' ? '600' : '400'
                         }}
-                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad1' ? '#fef3c7' : '#f8fafc'}
-                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad1' ? '#fef3c7' : 'transparent'}
+                        onMouseOver={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad1' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad1' ? '#fef3c7' : 'transparent'}
                       >
                         📝 Actividad 1
                       </div>
                       <div
-                        onClick={() => setSelectedActivity('actividad2')}
+                        onClick={() => {
+                          // Set the activity directly instead of menu-open
+                          setSelectedActivity('actividad2');
+                          setLastSelectedActivity('actividad2');
+                        }}
                         style={{
                           padding: '0.75rem 1rem',
                           cursor: 'pointer',
                           borderBottom: '1px solid #f1f5f9',
-                          background: selectedActivity === 'actividad2' ? '#fef3c7' : 'transparent',
-                          color: selectedActivity === 'actividad2' ? '#92400e' : '#374151',
-                          fontWeight: selectedActivity === 'actividad2' ? '600' : '400'
+                          background: lastSelectedActivity === 'actividad2' ? '#fef3c7' : 'transparent',
+                          color: lastSelectedActivity === 'actividad2' ? '#92400e' : '#374151',
+                          fontWeight: lastSelectedActivity === 'actividad2' ? '600' : '400'
                         }}
-                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad2' ? '#fef3c7' : '#f8fafc'}
-                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad2' ? '#fef3c7' : 'transparent'}
+                        onMouseOver={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad2' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad2' ? '#fef3c7' : 'transparent'}
                       >
                         📋 Actividad 2
                       </div>
                       <div
-                        onClick={() => setSelectedActivity('actividad3')}
+                        onClick={() => {
+                          // Set the activity directly instead of menu-open
+                          setSelectedActivity('actividad3');
+                          setLastSelectedActivity('actividad3');
+                        }}
                         style={{
                           padding: '0.75rem 1rem',
                           cursor: 'pointer',
                           borderBottom: '1px solid #f1f5f9',
-                          background: selectedActivity === 'actividad3' ? '#fef3c7' : 'transparent',
-                          color: selectedActivity === 'actividad3' ? '#92400e' : '#374151',
-                          fontWeight: selectedActivity === 'actividad3' ? '600' : '400'
+                          background: lastSelectedActivity === 'actividad3' ? '#fef3c7' : 'transparent',
+                          color: lastSelectedActivity === 'actividad3' ? '#92400e' : '#374151',
+                          fontWeight: lastSelectedActivity === 'actividad3' ? '600' : '400'
                         }}
-                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad3' ? '#fef3c7' : '#f8fafc'}
-                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad3' ? '#fef3c7' : 'transparent'}
+                        onMouseOver={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad3' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad3' ? '#fef3c7' : 'transparent'}
                       >
                         📊 Actividad 3
                       </div>
                       <div
-                        onClick={() => setSelectedActivity('actividad4')}
+                        onClick={() => {
+                          // Set the activity directly instead of menu-open
+                          setSelectedActivity('actividad4');
+                          setLastSelectedActivity('actividad4');
+                        }}
                         style={{
                           padding: '0.75rem 1rem',
                           cursor: 'pointer',
-                          background: selectedActivity === 'actividad4' ? '#fef3c7' : 'transparent',
-                          color: selectedActivity === 'actividad4' ? '#92400e' : '#374151',
-                          fontWeight: selectedActivity === 'actividad4' ? '600' : '400'
+                          background: lastSelectedActivity === 'actividad4' ? '#fef3c7' : 'transparent',
+                          color: lastSelectedActivity === 'actividad4' ? '#92400e' : '#374151',
+                          fontWeight: lastSelectedActivity === 'actividad4' ? '600' : '400'
                         }}
-                        onMouseOver={e => e.currentTarget.style.background = selectedActivity === 'actividad4' ? '#fef3c7' : '#f8fafc'}
-                        onMouseOut={e => e.currentTarget.style.background = selectedActivity === 'actividad4' ? '#fef3c7' : 'transparent'}
+                        onMouseOver={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad4' ? '#fef3c7' : '#f8fafc'}
+                        onMouseOut={e => e.currentTarget.style.background = lastSelectedActivity === 'actividad4' ? '#fef3c7' : 'transparent'}
                       >
                         📝 Actividad 4
                       </div>
@@ -364,7 +390,7 @@ function App() {
               segments={segments}
               projectData={projectData}
               hideUpload={true} // Ocultar la subida de archivos ya que usamos la API
-              selectedActivity={selectedActivity} // Pasar la actividad seleccionada
+              selectedActivity={selectedActivity === 'menu-open' ? lastSelectedActivity : selectedActivity} // Pasar la actividad real seleccionada
             />
           </div>
         );
